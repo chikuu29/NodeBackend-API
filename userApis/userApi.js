@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt');
 const { DateTime } = require('luxon');
 const MongoDBManager = require('../commonServices/mongoServices');
 console.log('MongoDBManager :', MongoDBManager);
-const { readJsonFiles, requestDataInjectionCheck, logError, logInfo, sendEmail, generateTokens } = require('../commonServices/commonOperation');
+const { readJsonFiles, requestDataInjectionCheck, logError, logInfo, sendEmail, generateTokens ,getNewAccessToken} = require('../commonServices/commonOperation');
 // const { send_email } = require('./emailService'); // Assuming you have an email service file
 
 const mongoConfig = readJsonFiles('./applicationConfig/mongoConfig.json');
@@ -310,7 +310,7 @@ exports.loginUser = async (req, res) => {
             console.log("User doesn't exists");
             return res.status(404).json({ message: 'User does not exist' });
         } else {
-            console.log("User exists", storedData);
+            console.log("User exists");
             const storedHashedPassword = storedData[0].password;
             const providedPassword = userData['password'];
 
@@ -325,13 +325,11 @@ exports.loginUser = async (req, res) => {
                     userName: storedData[0].userName || "default",
                     role: storedData[0].role || "default"
                 };
-                console.log('stored_user_id', storedData[0]._id);
                 const tokens = generateTokens(payload, otherConfig[projectName]['tokenConfig']['secretKey'], otherConfig[projectName]['tokenConfig']['acess_expiration_delta'], otherConfig[projectName]['tokenConfig']['refresh_expiration_delta']);
 
                 const response = { message: 'Login successful' };
                 // Set access token in the response headers
                 res.setHeader('Authorization', `Bearer ${tokens.access_token}`);
-                console.log('tokens```', tokens);
                 // Set refresh token in a secure cookie
                 res.cookie(
                     'refresh_token',
@@ -493,7 +491,7 @@ exports.updateUserEmail = async (request, res) => {
     
 }
 
-exports.getNewAcessTokenToken= async (request, res) => {
+exports.getNewAcessToken= async (request, res) => {
     try {
         if (!request || !request.body || !request.body.projectName) {
             return res.status(400).json({ message: 'Please provide Project Name' });
@@ -510,16 +508,19 @@ exports.getNewAcessTokenToken= async (request, res) => {
             return res.status(400).json({ message: 'Please provide refresh token' });
         }
     
-        const refresh_token = request.body.refresh_token;
-        const acessToken = get_new_access_token(refresh_token, otherConfig[projectName]['tokenConfig']['secretKey'], otherConfig[projectName]['tokenConfig']['acess_expiration_delta']);
+        const refresh_tokenArr = request.body.refresh_token.split('refresh_token=');
+        console.log('\n\n-----refresh_tokenArr---', refresh_tokenArr);
+        const refresh_token = refresh_tokenArr[refresh_tokenArr.length - 1].split(';')[0];
+        console.log('\n\n-----refresh_token---', refresh_token);
+        const acessToken = getNewAccessToken(refresh_token, otherConfig[projectName]['tokenConfig']['secretKey'], otherConfig[projectName]['tokenConfig']['acess_expiration_delta']);
     
         if (!acessToken) {
             return res.status(400).json({ message: 'Please provide valid refresh token' });
         }       
-        res.setHeader('Authorization', `Bearer ${tokens.access_token}`);
+        res.setHeader('Authorization', `Bearer ${acessToken}`);
         return res.status(200).json({ message: 'Token Refreshed', access_token: acessToken });
     } catch (err) {
-        console.log('error in login user-->', err);
+        console.log('error in getNewAcessToken-->', err);
         return res.status(500).json({ message: 'Error in getting new Refresh Token' });
     }
     

@@ -17,7 +17,7 @@ const APIMiddleware = async (req, res, next) => {
         if (!apiKey || !projectName) {
             return res.status(400).json({ message: 'Please provide apiKey & projectName', status: 400 });
         }
-        if (!checkValidKeyInDictionary(apiRequirementsConfig, projectName)) {
+        if (!apiRequirementsConfig[projectName]) {
             return res.status(400).json({ message: 'projectName does not exist', status: 400 });
         }
         if (apiKey !== otherConfig[projectName].apiKey) {
@@ -25,7 +25,7 @@ const APIMiddleware = async (req, res, next) => {
         }
         console.log('request.path', req.path);
         if (req.path.startsWith('/Auth/')) {
-            if (!checkValidKeyInDictionary(apiRequirementsConfig, projectName)) {
+            if (!apiRequirementsConfig[projectName]) {
                 return res.status(400).json({ message: 'projectName does not exist', status: 403 });
             }
             const accessToken = req.headers.authorization.split('Bearer ').pop();

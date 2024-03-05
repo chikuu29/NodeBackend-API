@@ -4,10 +4,11 @@ const customMiddleware=require('../middlewares/customMidddleware');
 // const auth=require('../middleware/auth');
 
 const userController=require('../userApis/userApi');
-router.post('/registerUser/',userController.registerUser);
-router.get('/forGotPasswordOnUserId/',userController.forgotPasswordOnUserId);
-router.post('/loginUser/',userController.loginUser);
-router.post('/passWordResetVerification/',userController.passWordResetVerification);
+router.post('/registerUser/',customMiddleware,userController.registerUser);
+router.get('/forGotPasswordOnUserId/',customMiddleware,userController.forgotPasswordOnUserId);
+router.post('/loginUser/',customMiddleware,userController.loginUser);
+router.get('/getNewAcessToken/',customMiddleware,userController.getNewAcessToken);
+router.post('/passWordResetVerification/',customMiddleware,userController.passWordResetVerification);
 router.post('/Auth/emailVerifyUser/',customMiddleware,userController.emailVerifyUser);
 router.post('/Auth/updateUserEmail/',customMiddleware,userController.updateUserEmail);
 router.post('/Auth/updateUserBasicData/',customMiddleware,userController.updateUserBasicData);

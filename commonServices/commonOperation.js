@@ -95,10 +95,7 @@ const intersection = (arr1, arr2) => {
     return [...intersectionSet];
 };
 
-// Check if key is valid in dictionary
-const checkValidKeyInDictionary = (data, key) => {
-    return data[key] !== undefined;
-};
+
 
 // Send email
 
@@ -131,7 +128,6 @@ async function sendEmail(subject, body, toEmail, smtpServer = otherConfig['email
     }
 }
 
-module.exports = sendEmail;
 
 
 // Generate tokens
@@ -152,6 +148,9 @@ const generateTokens = (payload, secretKey, accessExpirationDelta, refreshExpira
         iat: Math.floor(Date.now() / 1000),
     };
     const refresh_token = jwt.sign(refresh_token_payload, secretKey);
+    console.log('refresh_token--->',refresh_token)
+    const refresh_token_data = jwt.verify(refresh_token, secretKey);
+        console.log('refresh_token_data--', refresh_token_data);
 
     return { access_token, refresh_token };
 };
@@ -160,21 +159,30 @@ const generateTokens = (payload, secretKey, accessExpirationDelta, refreshExpira
 const getNewAccessToken = (refresh_token, secretKey, accessExpirationDelta) => {
     try {
         const refresh_token_data = jwt.verify(refresh_token, secretKey);
-        const payload = refresh_token_data.payload;
+        console.log('refresh_token_data', refresh_token_data);
+        // Check if the refresh token has payload and expiration time
+        if (refresh_token_data && refresh_token_data.exp && refresh_token_data) {
+            const payload = refresh_token_data;
+            // Create a new access token with an updated expiration time
+            const new_access_token = jwt.sign({
+                ...payload,
+                exp: Math.floor(Date.now() / 1000) + accessExpirationDelta,
+                iat: Math.floor(Date.now() / 1000)
+            }, secretKey);
 
-        const new_access_token = jwt.sign({
-            ...payload,
-            exp: Math.floor(Date.now() / 1000) + accessExpirationDelta,
-            iat: Math.floor(Date.now() / 1000),
-            ...refresh_token_data
-        }, secretKey);
-
-        return new_access_token;
+            return new_access_token;
+        } else {
+            // Handle invalid or missing payload in the refresh token
+            console.error('Invalid or missing payload in the refresh token');
+            return null;
+        }
     } catch (error) {
+        // Handle JWT verification errors
         console.error(`Error: ${error.message}`);
         return null;
     }
 };
+
 
 // Validate access token
 const validateAccessToken = (access_token, secretKey) => {
@@ -314,7 +322,6 @@ module.exports = {
     validateLength,
     validatePattern,
     intersection,
-    checkValidKeyInDictionary,
     sendEmail,
     generateTokens,
     getNewAccessToken,
