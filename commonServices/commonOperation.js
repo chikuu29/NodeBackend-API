@@ -47,7 +47,7 @@ const decryptJsonFile = (filename, key) => {
 //     .catch(error => console.error("Decryption error:", error));
 
 
-const readJsonFiles = (filePath, readEncryptFile = true) => {
+const readJsonFiles = (filePath, readEncryptFile = false) => {
     try {
         if (readEncryptFile) {
             return decryptJsonFile(filePath + '.enc', key);
