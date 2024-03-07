@@ -1,5 +1,5 @@
 const { MongoClient } = require('mongodb');
-const  commonOperation  = require('./commonOperation');
+const commonOperation = require('./commonOperation');
 
 const mongoConfig = commonOperation.readJsonFiles('applicationConfig/mongoConfig.json');
 const auth = mongoConfig.auth;
@@ -8,9 +8,12 @@ const auth = mongoConfig.auth;
 async function connectMongo(user, password, databaseName, authMechanism, port, host) {
     try {
         // const uri = `mongodb://${user}:${password}@${host}:${port}/?authSource=${databaseName}&authMechanism=${authMechanism}`;
-        const mongoConnectionURL = `mongodb+srv://${user}:${password}@cluster0.sklu9w7.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`
+        const mongoConnectionURL = `mongodb+srv://${user}:${password}@cluster0.sklu9w7.mongodb.net/${databaseName}?retryWrites=true&w=majority&appName=Cluster0`
         const client = new MongoClient(mongoConnectionURL);
         await client.connect();
+        // databasesList = await client.db().admin().listDatabases();
+        // console.log(client.db("myMongoDB").collection())
+        // console.log("Databases:", databasesList);
         console.log("---->connected to mongo<-----");
         return client.db();
     } catch (err) {
@@ -19,13 +22,15 @@ async function connectMongo(user, password, databaseName, authMechanism, port, h
     }
 }
 let db;
+// let dataBaseName = auth.databaseName
 async function connect() {
- db = await connectMongo(auth.user, auth.password, auth.databaseName, auth.authMechanism, auth.port, auth.host);
+    db = await connectMongo(auth.user, auth.password, auth.databaseName, auth.authMechanism, auth.port, auth.host);
 }
 connect();
 class MongoDBManager {
-    constructor(database_name) {
-        this.database_name = database_name;
+
+    constructor() {
+       
     }
 
     getCollection(collection_name) {
@@ -34,18 +39,18 @@ class MongoDBManager {
 
     async insertDocument(collection_name, document) {
         // try {
-            const collection = this.getCollection(collection_name);
-            const result = await collection.insertOne(document);
-            console.log(`Document inserted with ID: ${result.insertedId}`);
+        const collection = this.getCollection(collection_name);
+        const result = await collection.insertOne(document);
+        console.log(`Document inserted with ID: ${result.insertedId}`);
         // } catch (err) {
         //     console.error("Error in inserting document:", err);
         // }
     }
     async insertManyDocuments(collectionName, documents) {
         // try {
-            const collection = this.getCollection(collectionName);
-            const result = await collection.insertMany(documents);
-            console.log(`Documents inserted with IDs: ${result.insertedIds}`);
+        const collection = this.getCollection(collectionName);
+        const result = await collection.insertMany(documents);
+        console.log(`Documents inserted with IDs: ${result.insertedIds}`);
         // } catch (err) {
         //     console.error("Error in inserting documents:", err);
         // }
@@ -53,10 +58,10 @@ class MongoDBManager {
 
     async updateDocument(collectionName, filterQuery, updateData) {
         // try {
-            console.log('collectionName--', collectionName, 'filterQuery', filterQuery, 'updateData', updateData);
-            const collection = this.getCollection(collectionName);
-            const result = await collection.updateOne(filterQuery, updateData);
-            console.log(`Matched ${result.matchedCount} document(s) and modified ${result.modifiedCount} document(s)`);
+        console.log('collectionName--', collectionName, 'filterQuery', filterQuery, 'updateData', updateData);
+        const collection = this.getCollection(collectionName);
+        const result = await collection.updateOne(filterQuery, updateData);
+        console.log(`Matched ${result.matchedCount} document(s) and modified ${result.modifiedCount} document(s)`);
         // } catch (err) {
         //     console.error("Error in updating document:", err);
         // }
@@ -64,9 +69,9 @@ class MongoDBManager {
 
     async deleteDocument(collectionName, filterQuery) {
         // try {
-            const collection = this.getCollection(collectionName);
-            const result = await collection.deleteOne(filterQuery);
-            console.log(`Deleted ${result.deletedCount} document(s)`);
+        const collection = this.getCollection(collectionName);
+        const result = await collection.deleteOne(filterQuery);
+        console.log(`Deleted ${result.deletedCount} document(s)`);
         // } catch (err) {
         //     console.error("Error in deleting document:", err);
         // }
@@ -74,15 +79,15 @@ class MongoDBManager {
 
     async findDocuments(collectionName, query = {}, projection = null) {
         // try {
-            const collection = this.getCollection(collectionName);
-            const cursor = collection.find(query, projection);
-            const listCursor = await cursor.toArray();
-            if (listCursor.length > 0) {
-                return listCursor;
-            } else {
-                console.log("No documents found");
-                return [];
-            }
+        const collection = this.getCollection(collectionName);
+        const cursor = collection.find(query, projection);
+        const listCursor = await cursor.toArray();
+        if (listCursor.length > 0) {
+            return listCursor;
+        } else {
+            console.log("No documents found");
+            return [];
+        }
         // } catch (err) {
         //     console.error("Error in finding documents:", err);
         //     return [];
@@ -91,12 +96,12 @@ class MongoDBManager {
 
     async aggregateDocuments(collectionName, pipeline, projection = null) {
         // try {
-            const collection = this.getCollection(collectionName);
-            if (projection) {
-                pipeline.push({ $project: projection });
-            }
-            const result = await collection.aggregate(pipeline).toArray();
-            return result;
+        const collection = this.getCollection(collectionName);
+        if (projection) {
+            pipeline.push({ $project: projection });
+        }
+        const result = await collection.aggregate(pipeline).toArray();
+        return result;
         // } catch (err) {
         //     console.error("Error in aggregation:", err);
         //     return [];

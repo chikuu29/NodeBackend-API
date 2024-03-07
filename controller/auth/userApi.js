@@ -11,8 +11,7 @@ const mongoConfig = readJsonFiles('./applicationConfig/mongoConfig.json');
 const apiRequirementsConfig = readJsonFiles('./applicationConfig/apiRequirements.json');
 const otherConfig = readJsonFiles('./applicationConfig/otherFeaturesConfigs.json');
 
-const mongoDBManagerObj = new MongoDBManager(mongoConfig.auth.databaseName);
-
+const mongoDBManagerObj = new MongoDBManager();
 
 function send_otp_email(to_email, otp) {
     const subject = "Your OTP for account verification";
@@ -86,9 +85,10 @@ exports.registerUser = async (req, res) => {
             userData['numOfLoginFailAttempt'] = 0
             userData['blockTillLogInTimeStamp'] = DateTime.now()
             // You need to implement the send_otp_email function
-            send_otp_email(userData.email, otp);
+            
 
             await mongoDBManagerObj.insertDocument(mongoConfig[projectName].userCol, userData);
+            send_otp_email(userData.email, otp);
             const message_info = { message: `User: ${userData.userName} registered successfully`, projectName };
             logInfo(message_info);
             return res.status(200).json(message_info);
