@@ -3,7 +3,7 @@ const router=express.Router();
 const customMiddleware=require('../middlewares/customMidddleware');
 // const auth=require('../middleware/auth');
 
-const userController=require('../auth/userApi');
+const userController=require('../controller/auth/userApi');
 router.post('/registerUser',customMiddleware,userController.registerUser);
 router.get('/forGotPasswordOnUserId',customMiddleware,userController.forgotPasswordOnUserId);
 router.post('/loginUser',customMiddleware,userController.loginUser);

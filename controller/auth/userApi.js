@@ -2,9 +2,9 @@
 // const router = express.Router();
 const bcrypt = require('bcrypt');
 const { DateTime } = require('luxon');
-const MongoDBManager = require('../commonServices/mongoServices');
+const MongoDBManager = require('../../commonServices/mongoServices');
 console.log('MongoDBManager :', MongoDBManager);
-const { readJsonFiles, requestDataInjectionCheck, logError, logInfo, sendEmail, generateTokens ,getNewAccessToken} = require('../commonServices/commonOperation');
+const { readJsonFiles, requestDataInjectionCheck, logError, logInfo, sendEmail, generateTokens ,getNewAccessToken} = require('../../commonServices/commonOperation');
 // const { send_email } = require('./emailService'); // Assuming you have an email service file
 
 const mongoConfig = readJsonFiles('./applicationConfig/mongoConfig.json');
