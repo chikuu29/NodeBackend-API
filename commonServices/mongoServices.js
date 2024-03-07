@@ -7,11 +7,12 @@ const auth = mongoConfig.auth;
 
 async function connectMongo(user, password, databaseName, authMechanism, port, host) {
     try {
-        const uri = `mongodb://${user}:${password}@${host}:${port}/?authSource=${databaseName}&authMechanism=${authMechanism}`;
-        const client = new MongoClient(uri);
+        // const uri = `mongodb://${user}:${password}@${host}:${port}/?authSource=${databaseName}&authMechanism=${authMechanism}`;
+        const mongoConnectionURL = `mongodb+srv://${user}:${password}@cluster0.sklu9w7.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`
+        const client = new MongoClient(mongoConnectionURL);
         await client.connect();
         console.log("---->connected to mongo<-----");
-        return client.db(databaseName);
+        return client.db();
     } catch (err) {
         console.error("error in mongo connection:", err);
         return null;

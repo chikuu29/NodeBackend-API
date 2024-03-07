@@ -14,6 +14,7 @@ const APIMiddleware = async (req, res, next) => {
         console.log('requestBody', requestBody);
         const apiKey = requestBody.apiKey;
         const projectName = requestBody.projectName;
+        console.log('apikey--', apiKey, 'projectName--', projectName)
         if (!apiKey || !projectName) {
             return res.status(400).json({ message: 'Please provide apiKey & projectName', status: 400 });
         }
