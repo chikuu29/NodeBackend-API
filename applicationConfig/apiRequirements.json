@@ -34,7 +34,7 @@
             "address":{
                 "minLength":"5",
                 "pattern":"",
-                "required":true
+                "required":false
             }
         },
         "loginFields":{

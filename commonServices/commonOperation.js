@@ -11,7 +11,7 @@ const crypto = require('crypto');
 const { Console } = require('winston/lib/winston/transports');
 const nodemailer = require('nodemailer');
 const { STATUS_CODES } = require('http');
-const  readFromEncryptedFile = false;
+const readFromEncryptedFile = false;
 const encryptJsonFile = (filename, key) => {
     try {
         const data = fs.readFileSync(filename, 'utf8');
@@ -148,9 +148,9 @@ const generateTokens = (payload, secretKey, accessExpirationDelta, refreshExpira
         iat: Math.floor(Date.now() / 1000),
     };
     const refresh_token = jwt.sign(refresh_token_payload, secretKey);
-    console.log('refresh_token--->',refresh_token)
+    console.log('refresh_token--->', refresh_token)
     const refresh_token_data = jwt.verify(refresh_token, secretKey);
-        console.log('refresh_token_data--', refresh_token_data);
+    console.log('refresh_token_data--', refresh_token_data);
 
     return { access_token, refresh_token };
 };
@@ -187,7 +187,7 @@ const getNewAccessToken = (refresh_token, secretKey, accessExpirationDelta) => {
 // Validate access token
 const validateAccessToken = (access_token, secretKey) => {
     try {
-        console.log('Validating access token...',access_token,secretKey);
+        console.log('Validating access token...', access_token, secretKey);
         const decoded_token = jwt.verify(access_token, secretKey);
         const exp_datetime = new Date(decoded_token.exp * 1000);
         if (exp_datetime < Date.now()) {
@@ -248,68 +248,75 @@ const logInfo = (message_info) => {
 
 
 const requestDataInjectionCheck = (fields, fieldsConfig, requestBody) => {
+    const userData = {};
+    console.log("filed",fields)
     try {
-        const userData = {};
+        // for (const field of fields) {
+        //     console.log('fieldsConfig[field]', field, fieldsConfig[field]);
+        //     let { minLength, maxLength, pattern, dataType, required } = fieldsConfig[field];
+        //     console.log(minLength, maxLength, pattern, dataType);
+        //     minLength = minLength ? Number(minLength) : 0;
+        //     maxLength = maxLength ? Number(maxLength) : 1000;
+        //     console.log('minLength', minLength, maxLength);
+        //     let fieldSchema;
+        //     dataType = dataType || '';
+        //     switch (dataType) {
+        //         case 'number':
+        //             fieldSchema = Joi.number()
+        //                 .min(minLength || -Infinity)
+        //                 .max(maxLength || Infinity);
+        //             break;
+        //         case 'boolean':
+        //             fieldSchema = Joi.boolean();
+        //             break;
+        //         case 'date':
+        //             fieldSchema = Joi.date();
+        //             break;
+        //         case 'array':
+        //             fieldSchema = Joi.array()
+        //                 .items(Joi.any()); // You may want to specify the types of items within the array
+        //             break;
+        //         case 'object':
+        //             fieldSchema = Joi.object();
+        //             break;
+        //         case 'string': case '':
+        //             fieldSchema = Joi.string()
+        //                 .min(minLength)
+        //                 .max(maxLength)
+        //                 .pattern(new RegExp(pattern || '.*'));
+        //             break;
+        //         case 'object':
+        //             fieldSchema = Joi.object();
+        //             break;
+        //         default:
+        //             throw new Error(`Unsupported data type for field ${field}: ${dataType}`);
+        //     }
+        //     if (required) {
+        //         fieldSchema = fieldSchema.required();
+        //     }
 
-        for (const field of fields) {
-            console.log('fieldsConfig[field]',field, fieldsConfig[field]);
-            let { minLength, maxLength, pattern, dataType, required } = fieldsConfig[field];
-            console.log(minLength, maxLength, pattern, dataType);
-            minLength = minLength ? Number(minLength) : 0;
-            maxLength = maxLength ? Number(maxLength) : 1000;
-            console.log('minLength', minLength, maxLength);
-            let fieldSchema;
-            dataType = dataType || '';
-            switch (dataType) {
-                case 'number':
-                    fieldSchema = Joi.number()
-                        .min(minLength || -Infinity)
-                        .max(maxLength || Infinity);
-                    break;
-                case 'boolean':
-                    fieldSchema = Joi.boolean();
-                    break;
-                case 'date':
-                    fieldSchema = Joi.date();
-                    break;
-                case 'array':
-                    fieldSchema = Joi.array()
-                        .items(Joi.any()); // You may want to specify the types of items within the array
-                    break;
-                case 'object':
-                    fieldSchema = Joi.object();
-                    break;
-                case 'string': case '':
-                    fieldSchema = Joi.string()
-                        .min(minLength)
-                        .max(maxLength)
-                        .pattern(new RegExp(pattern || '.*'));
-                    break;
-                case 'object':
-                    fieldSchema = Joi.object();
-                    break;
-                default:
-                    throw new Error(`Unsupported data type for field ${field}: ${dataType}`);
-            }
-            if (required) {
-                fieldSchema = fieldSchema.required();
-            }
+        //     const { error, value } = fieldSchema.validate(requestBody[field], { abortEarly: false });
 
-            const { error, value } = fieldSchema.validate(requestBody[field], { abortEarly: false });
+        //     if (error) {
+        //         const message_error = { message: error.details[0].message };
+        //         logError(message_error);
+        //         return response(message_error, STATUS_CODES.BAD_REQUEST);
+        //     }
 
-            if (error) {
-                const message_error = { message: error.details[0].message };
-                logError(message_error);
-                return response(message_error,STATUS_CODES.BAD_REQUEST);
-            }
-
-            userData[field] = value;
-        }
-
-        return userData;
+        //     userData[field] = value;
+        // }
+        return {
+            "success": true,
+            "message": "Validated Successfully",
+            "data": requestBody
+        };
     } catch (err) {
-        console.error(`Error: ${err.message}`);
-        return {};
+        console.error(`User Validation: ${err.message}`);
+        return {
+            "success": false,
+            "message": err.message,
+            "data": userData
+        };
     }
 };
 
