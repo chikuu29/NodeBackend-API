@@ -33,47 +33,47 @@ class MongoDBManager {
     }
 
     async insertDocument(collection_name, document) {
-        try {
+        // try {
             const collection = this.getCollection(collection_name);
             const result = await collection.insertOne(document);
             console.log(`Document inserted with ID: ${result.insertedId}`);
-        } catch (err) {
-            console.error("Error in inserting document:", err);
-        }
+        // } catch (err) {
+        //     console.error("Error in inserting document:", err);
+        // }
     }
     async insertManyDocuments(collectionName, documents) {
-        try {
+        // try {
             const collection = this.getCollection(collectionName);
             const result = await collection.insertMany(documents);
             console.log(`Documents inserted with IDs: ${result.insertedIds}`);
-        } catch (err) {
-            console.error("Error in inserting documents:", err);
-        }
+        // } catch (err) {
+        //     console.error("Error in inserting documents:", err);
+        // }
     }
 
     async updateDocument(collectionName, filterQuery, updateData) {
-        try {
+        // try {
             console.log('collectionName--', collectionName, 'filterQuery', filterQuery, 'updateData', updateData);
             const collection = this.getCollection(collectionName);
             const result = await collection.updateOne(filterQuery, updateData);
             console.log(`Matched ${result.matchedCount} document(s) and modified ${result.modifiedCount} document(s)`);
-        } catch (err) {
-            console.error("Error in updating document:", err);
-        }
+        // } catch (err) {
+        //     console.error("Error in updating document:", err);
+        // }
     }
 
     async deleteDocument(collectionName, filterQuery) {
-        try {
+        // try {
             const collection = this.getCollection(collectionName);
             const result = await collection.deleteOne(filterQuery);
             console.log(`Deleted ${result.deletedCount} document(s)`);
-        } catch (err) {
-            console.error("Error in deleting document:", err);
-        }
+        // } catch (err) {
+        //     console.error("Error in deleting document:", err);
+        // }
     }
 
     async findDocuments(collectionName, query = {}, projection = null) {
-        try {
+        // try {
             const collection = this.getCollection(collectionName);
             const cursor = collection.find(query, projection);
             const listCursor = await cursor.toArray();
@@ -83,24 +83,24 @@ class MongoDBManager {
                 console.log("No documents found");
                 return [];
             }
-        } catch (err) {
-            console.error("Error in finding documents:", err);
-            return [];
-        }
+        // } catch (err) {
+        //     console.error("Error in finding documents:", err);
+        //     return [];
+        // }
     }
 
     async aggregateDocuments(collectionName, pipeline, projection = null) {
-        try {
+        // try {
             const collection = this.getCollection(collectionName);
             if (projection) {
                 pipeline.push({ $project: projection });
             }
             const result = await collection.aggregate(pipeline).toArray();
             return result;
-        } catch (err) {
-            console.error("Error in aggregation:", err);
-            return [];
-        }
+        // } catch (err) {
+        //     console.error("Error in aggregation:", err);
+        //     return [];
+        // }
     }
 
     // Implement other methods similarly

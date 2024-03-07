@@ -11,7 +11,7 @@ const crypto = require('crypto');
 const { Console } = require('winston/lib/winston/transports');
 const nodemailer = require('nodemailer');
 const { STATUS_CODES } = require('http');
-
+const  readFromEncryptedFile = false;
 const encryptJsonFile = (filename, key) => {
     try {
         const data = fs.readFileSync(filename, 'utf8');
