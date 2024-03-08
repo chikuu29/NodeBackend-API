@@ -248,11 +248,11 @@ const logInfo = (message_info) => {
 
 
 const requestDataInjectionCheck = (fields, fieldsConfig, requestBody) => {
-    try {
+    // try {
         const userData = {};
-
+        let ErrorArr = [];
         for (const field of fields) {
-            console.log('fieldsConfig[field]',field, fieldsConfig[field]);
+            // console.log('fieldsConfig[field]',field, fieldsConfig[field]);
             let { minLength, maxLength, pattern, dataType, required } = fieldsConfig[field];
             console.log(minLength, maxLength, pattern, dataType);
             minLength = minLength ? Number(minLength) : 0;
@@ -296,21 +296,26 @@ const requestDataInjectionCheck = (fields, fieldsConfig, requestBody) => {
             }
 
             const { error, value } = fieldSchema.validate(requestBody[field], { abortEarly: false });
-
+            // console.log('joi error----->', error,'joi value----->',value);
             if (error) {
-                const message_error = { message: error.details[0].message };
-                logError(message_error);
-                return response(message_error,STATUS_CODES.BAD_REQUEST);
+                ErrorArr.push({
+                    field: field,
+                    message:error.details[0].message
+                });
+                // console.log('joi error----->', error.details[0].message);
+                // return response(message_error,STATUS_CODES.BAD_REQUEST);
             }
 
             userData[field] = value;
         }
-
+        if (ErrorArr.length > 0) {
+            return {error : ErrorArr};
+        }
         return userData;
-    } catch (err) {
-        console.error(`Error: ${err.message}`);
-        return {};
-    }
+    // } catch (err) {
+    //     console.error(`Error: ${err.message}`);
+    //     return {};
+    // }
 };
 
 
