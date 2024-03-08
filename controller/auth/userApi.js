@@ -45,76 +45,49 @@ function send_otp_email(to_email, otp) {
 
 exports.registerUser = async (req, res) => {
     try {
-        console.log('req.body :', req.body);
+        // console.log('req.body :', req.body);
         if (!req.body || !req.body.projectName) {
             const message_error = { message: 'Please provide Project Name' };
-            logError(message_error);
+            logError({...message_error});
             return res.status(400).json(message_error);
         }
 
         const { projectName } = req.body;
         if (!apiRequirementsConfig[projectName]) {
             const message_error = { message: 'projectName does not exist' };
-            logError(message_error);
+            logError({...message_error});
             return res.status(400).json(message_error);
         }
 
         const userFieldsConfig = apiRequirementsConfig[projectName].registerFields;
         const userFields = Object.keys(userFieldsConfig);
 
+        const userData = requestDataInjectionCheck(userFields, userFieldsConfig, req.body);
+        if (userData.error) {
+            const message_error = { message: JSON.stringify(userData.error) };
+            logError({...message_error});
+            return res.status(500).json(message_error);
+        } 
+        // console.log('userData :', userData);
+        const existingUser = await mongoDBManagerObj.findDocuments(mongoConfig[projectName].userCol, { userName: userData.userName }, {});
+        if (existingUser.length === 0) {
+            const hashed_password = await bcrypt.hash(userData.password, 10);
+            userData.password = hashed_password;
 
-        const validatedUserData = requestDataInjectionCheck(userFields, userFieldsConfig, req.body);
-        // if (userData instanceof Response) {
-        //     return userData;
-        // } 
 
-
-        console.log('validatedUserData :', validatedUserData);
-        if (validatedUserData.success) {
-            const existingUser = await mongoDBManagerObj.findDocuments(mongoConfig[projectName].userCol, { userName: validatedUserData['data'].userName }, {});
-            // console.log("fetch Mongo DB DATA", existingUser);
-            if (existingUser.length === 0) {
-                const hashed_password = await bcrypt.hash(validatedUserData['data'].password, 10);
-                validatedUserData['data'].password = hashed_password;
-                const otp = Math.floor(100000 + Math.random() * 900000).toString();
-                const emailVefData = {
-                    otp,
-                    otpTimeStamp: DateTime.now(),
-                    numOfEmailVefFailAttempt: 0,
-                    blockedTillEmailVefTimeStamp: DateTime.now(),
-                    verified: false,
-                };
-                validatedUserData['data'].emailVefData = emailVefData;
-                validatedUserData['data']['numOfLoginFailAttempt'] = 0
-                validatedUserData['data']['blockTillLogInTimeStamp'] = DateTime.now()
-                // You need to implement the send_otp_email function
-                await mongoDBManagerObj.insertDocument(mongoConfig[projectName].userCol, validatedUserData['data'])
-                // send_otp_email(userData.email, otp);
-                const message_info = {
-                    message: "user registered successfully",
-                    success: true,
-                    data: validatedUserData['data']
-                };
-                logInfo(message_info);
-                return res.status(200).json(message_info);
-            } else {
-                const message_info = {
-                    message: `user already exists with this Email:${validatedUserData['data'].email} or Phone:${validatedUserData['data'].mobile}`,
-                    success:false,
-                    projectName
-                };
-                logInfo(message_info);
-                return res.status(400).json(message_info);
-            }
+            await mongoDBManagerObj.insertDocument(mongoConfig[projectName].userCol, userData);
+            const message_info = { message: `User: ${userData.userName} registered successfully`, projectName };
+             logInfo({...message_info});
+            return res.status(200).json(message_info);
         } else {
-            const message_info = { message: validatedUserData.message, projectName };
-            logInfo(message_info);
+            const message_info = { message: `User: ${userData.userName} already exists`, projectName };
+             logInfo({...message_info});
             return res.status(409).json(message_info);
         }
     } catch (err) {
         console.error('error in registering user-->', err);
         const message_error = { message: `Error in registering user: ${err}` };
-        logError(message_error);
+        logError({...message_error});
         return res.status(500).json(message_error);
     }
 };
@@ -123,7 +96,7 @@ exports.forgotPasswordOnUserId = async (request, res) => {
     try {
         if (!request || !request.body || !request.body.projectName) {
             const message_error = { message: 'Please provide Project Name' };
-            logError(message_error);
+            logError({...message_error});
             return res.status(400).json(message_error);
         }
 
@@ -132,18 +105,19 @@ exports.forgotPasswordOnUserId = async (request, res) => {
 
         if (!apiRequirementsConfig[projectName]) {
             const message_error = { message: 'projectName does not exist' };
-            logError(message_error);
+            logError({...message_error});
             return res.status(400).json(message_error);
         }
 
         const userFieldsConfig = apiRequirementsConfig[projectName]['forgotPassword'];
         const userFields = Object.keys(userFieldsConfig);
         console.log('-----3', userFields);
-
-        const userData = requestDataInjectionCheck(userFields, userFieldsConfig, request.body);
-
-        if (userData instanceof Response) {
-            return userData;
+    
+        const userData = requestDataInjectionCheck(userFields, userFieldsConfig, req.body);
+        if (userData.error) {
+            const message_error = { message: JSON.stringify(userData.error) };
+            logError({...message_error});
+            return res.status(500).json(message_error);
         }
 
         const dbUserDataArr = await mongoDBManagerObj.findDocuments(mongoConfig[projectName]['userCol'], { 'userName': userData['userName'] }, {});
@@ -151,7 +125,7 @@ exports.forgotPasswordOnUserId = async (request, res) => {
         if (dbUserDataArr.length === 0) {
             console.log("User doesn't exists");
             const message_info = { message: `User: ${userData['userName']} does not exist`, 'projectName': projectName };
-            logInfo(message_info);
+             logInfo({...message_info});
             return res.status(404).json(message_info);
         } else {
             const dbUserData = dbUserDataArr[0];
@@ -170,7 +144,7 @@ exports.forgotPasswordOnUserId = async (request, res) => {
             } else {
                 if (DateTime.now() < (pwdReset['blockedTillMulForgotTimeStamp'] || DateTime.now())) {
                     const message_info = { message: `User: ${userData['userName']} is blocked for password verification till ${pwdReset['blockedTillMulForgotTimeStamp'] || DateTime.now()}`, 'projectName': projectName };
-                    logInfo(message_info);
+                     logInfo({...message_info});
                     return res.status(200).json(message_info);
                 } else {
                     pwdReset['otp'] = otp;
@@ -192,13 +166,13 @@ exports.forgotPasswordOnUserId = async (request, res) => {
             await mongoDBManagerObj.updateDocument(mongoConfig[projectName]['userCol'], { 'userName': dbUserData['userName'] }, { '$set': dbUserData });
 
             const message_info = { message: `User: ${userData['userName']} Otp sent to your registered email`, 'projectName': projectName };
-            logInfo(message_info);
+             logInfo({...message_info});
             return res.status(200).json(message_info);
         }
     } catch (err) {
         console.log('error in resetting user password-->', err);
         const message_error = { message: 'Error in resetting user password: ' + err };
-        logError(message_error);
+        logError({...message_error});
         return res.status(500).json(message_error);
     }
 
@@ -208,7 +182,7 @@ exports.passWordResetVerification = async (request, res) => {
     try {
         if (!request || !request.body || !request.body.projectName) {
             const message_error = { message: 'Please provide Project Name' };
-            logError(message_error);
+            logError({...message_error});
             return res.status(400).json(message_error);
         }
 
@@ -217,17 +191,19 @@ exports.passWordResetVerification = async (request, res) => {
 
         if (!apiRequirementsConfig[projectName]) {
             const message_error = { message: 'projectName does not exist' };
-            logError(message_error);
+            logError({...message_error});
             return res.status(400).json(message_error);
         }
 
         const userFieldsConfig = apiRequirementsConfig[projectName]['passWordReset'];
         const userFields = Object.keys(userFieldsConfig);
         console.log('-----3', userFields);
-
-        const userData = requestDataInjectionCheck(userFields, userFieldsConfig, request.body);
-        if (userData instanceof Response) {
-            return userData;
+    
+        const userData = requestDataInjectionCheck(userFields, userFieldsConfig, req.body);
+        if (userData.error) {
+            const message_error = { message: JSON.stringify(userData.error) };
+            logError({...message_error});
+            return res.status(500).json(message_error);
         }
         console.log('-----5', userData);
 
@@ -237,7 +213,7 @@ exports.passWordResetVerification = async (request, res) => {
         if (Object.keys(userDb).length === 0) {
             console.log("User doesn't exist");
             const message_error = { message: `User: ${userData['userName']} does not exist`, 'projectName': projectName };
-            logError(message_error);
+            logError({...message_error});
             return res.status(404).json(message_error);
         } else {
             console.log("User exists");
@@ -245,13 +221,13 @@ exports.passWordResetVerification = async (request, res) => {
 
             if (Object.keys(pwdresetData).length === 0) {
                 const message_error = { message: `User: ${userData['userName']} does not have otp`, 'projectName': projectName };
-                logError(message_error);
+                logError({...message_error});
                 return res.status(400).json(message_error);
             }
 
             if (pwdresetData['blockedTillMulForgotTimeStamp'] !== null && DateTime.now() < (pwdresetData['blockedTillMulForgotTimeStamp'] || DateTime.now())) {
                 const message_info = { message: `User: ${userData['userName']} blocked due to multiple otp fail attempts till ${pwdresetData['blockedTillMulForgotTimeStamp']}`, 'projectName': projectName };
-                logInfo(message_info);
+                 logInfo({...message_info});
                 return res.status(400).json(message_info);
             }
 
@@ -269,7 +245,7 @@ exports.passWordResetVerification = async (request, res) => {
                     userDb['pwdReset'] = pwdresetData;
                     await mongoDBManagerObj.updateDocument(mongoConfig[projectName]['userCol'], { 'userName': userData['userName'] }, { '$set': userDb });
                     const message_error = { message: `User: ${userData['userName']} Invalid otp`, 'projectName': projectName };
-                    logError(message_error);
+                    logError({...message_error});
                     return res.status(400).json(message_error);
                 } else {
                     pwdresetData['passWordResetVefFailAttempt'] = 0;
@@ -280,7 +256,7 @@ exports.passWordResetVerification = async (request, res) => {
                     userDb['pwdReset'] = pwdresetData;
                     await mongoDBManagerObj.updateDocument(mongoConfig[projectName]['userCol'], { 'userName': userData['userName'] }, { '$set': userDb });
                     const message_info = { message: `User: ${userData['userName']} Password reset successfully`, 'projectName': projectName };
-                    logInfo(message_info);
+                     logInfo({...message_info});
                     return res.status(200).json(message_info);
                 }
             }
@@ -288,7 +264,7 @@ exports.passWordResetVerification = async (request, res) => {
     } catch (err) {
         console.log('error in resetting user password-->', err);
         const message_error = { message: 'Error in resetting user password ' + err };
-        logError(message_error);
+        logError({...message_error});
         return res.status(500).json(message_error);
     }
 
@@ -312,11 +288,11 @@ exports.loginUser = async (req, res) => {
         const userFieldsConfig = apiRequirementsConfig[projectName]['loginFields'];
         const userFields = Object.keys(userFieldsConfig);
 
-        const userData = requestDataInjectionCheck(userFields, userFieldsConfig, requestData);
-
-        if (userData instanceof Response) {
-            // Handle the response directly
-            return userData;
+        const userData = requestDataInjectionCheck(userFields, userFieldsConfig, req.body);
+        if (userData.error) {
+            const message_error = { message: JSON.stringify(userData.error) };
+            logError({...message_error});
+            return res.status(500).json(message_error);
         }
 
         const storedData = await mongoDBManagerObj.findDocuments(mongoConfig[projectName]['userCol'], { 'userName': userData['userName'] }, {});
@@ -383,11 +359,11 @@ exports.emailVerifyUser = async (req, res) => {
         const userFieldsConfig = apiRequirementsConfig[projectName].verifyUser;
         const userFields = Object.keys(userFieldsConfig);
 
-        const userData = requestDataInjectionCheck(userFields, userFieldsConfig, requestData);
-
-        if (userData instanceof Response) {
-            // Handle the response directly
-            return userData;
+        const userData = requestDataInjectionCheck(userFields, userFieldsConfig, req.body);
+        if (userData.error) {
+            const message_error = { message: JSON.stringify(userData.error) };
+            logError({...message_error});
+            return res.status(500).json(message_error);
         }
 
         const tokenInfo = req.tokenInfo;
@@ -458,10 +434,12 @@ exports.updateUserEmail = async (request, res) => {
         const userFieldsConfig = apiRequirementsConfig[projectName]['changeEmail'];
         const userFields = Object.keys(userFieldsConfig);
         console.log('-----3', userFields);
-
-        const userData = requestDataInjectionCheck(userFields, userFieldsConfig, request.body);
-        if (userData instanceof Response) {
-            return userData;
+    
+        const userData = requestDataInjectionCheck(userFields, userFieldsConfig, req.body);
+        if (userData.error) {
+            const message_error = { message: JSON.stringify(userData.error) };
+            logError({...message_error});
+            return res.status(500).json(message_error);
         }
 
         console.log('-----5', userData);
@@ -555,10 +533,12 @@ exports.AssignRoleToUser = async (request, res) => {
 
         const userFieldsConfig = apiRequirementsConfig[projectName]['AssignRoleToUser'];
         const userFields = Object.keys(userFieldsConfig);
-
-        const userData = requestDataInjectionCheck(userFields, userFieldsConfig, request.body);
-        if (userData instanceof Response) {
-            return userData;
+    
+        const userData = requestDataInjectionCheck(userFields, userFieldsConfig, req.body);
+        if (userData.error) {
+            const message_error = { message: JSON.stringify(userData.error) };
+            logError({...message_error});
+            return res.status(500).json(message_error);
         }
 
         const userName = request.body.userName;
@@ -595,11 +575,12 @@ exports.updateUserBasicData = async (request, res) => {
         const userFieldsConfig = apiRequirementsConfig[projectName]['changeBasicData'];
         const userFields = Object.keys(userFieldsConfig);
         console.log('-----3', userFields);
-
-        const userData = requestDataInjectionCheck(userFields, userFieldsConfig, request.body);
-        if (userData instanceof Response) {
-            // Handle the response directly
-            return userData;
+    
+        const userData = requestDataInjectionCheck(userFields, userFieldsConfig, req.body);
+        if (userData.error) {
+            const message_error = { message: JSON.stringify(userData.error) };
+            logError({...message_error});
+            return res.status(500).json(message_error);
         }
 
         const tokenInfo = request.tokenInfo;

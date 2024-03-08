@@ -248,76 +248,74 @@ const logInfo = (message_info) => {
 
 
 const requestDataInjectionCheck = (fields, fieldsConfig, requestBody) => {
-    const userData = {};
-    console.log("filed",fields)
-    try {
-        // for (const field of fields) {
-        //     console.log('fieldsConfig[field]', field, fieldsConfig[field]);
-        //     let { minLength, maxLength, pattern, dataType, required } = fieldsConfig[field];
-        //     console.log(minLength, maxLength, pattern, dataType);
-        //     minLength = minLength ? Number(minLength) : 0;
-        //     maxLength = maxLength ? Number(maxLength) : 1000;
-        //     console.log('minLength', minLength, maxLength);
-        //     let fieldSchema;
-        //     dataType = dataType || '';
-        //     switch (dataType) {
-        //         case 'number':
-        //             fieldSchema = Joi.number()
-        //                 .min(minLength || -Infinity)
-        //                 .max(maxLength || Infinity);
-        //             break;
-        //         case 'boolean':
-        //             fieldSchema = Joi.boolean();
-        //             break;
-        //         case 'date':
-        //             fieldSchema = Joi.date();
-        //             break;
-        //         case 'array':
-        //             fieldSchema = Joi.array()
-        //                 .items(Joi.any()); // You may want to specify the types of items within the array
-        //             break;
-        //         case 'object':
-        //             fieldSchema = Joi.object();
-        //             break;
-        //         case 'string': case '':
-        //             fieldSchema = Joi.string()
-        //                 .min(minLength)
-        //                 .max(maxLength)
-        //                 .pattern(new RegExp(pattern || '.*'));
-        //             break;
-        //         case 'object':
-        //             fieldSchema = Joi.object();
-        //             break;
-        //         default:
-        //             throw new Error(`Unsupported data type for field ${field}: ${dataType}`);
-        //     }
-        //     if (required) {
-        //         fieldSchema = fieldSchema.required();
-        //     }
+    // try {
+        const userData = {};
+        let ErrorArr = [];
+        for (const field of fields) {
+            // console.log('fieldsConfig[field]',field, fieldsConfig[field]);
+            let { minLength, maxLength, pattern, dataType, required } = fieldsConfig[field];
+            console.log(minLength, maxLength, pattern, dataType);
+            minLength = minLength ? Number(minLength) : 0;
+            maxLength = maxLength ? Number(maxLength) : 1000;
+            console.log('minLength', minLength, maxLength);
+            let fieldSchema;
+            dataType = dataType || '';
+            switch (dataType) {
+                case 'number':
+                    fieldSchema = Joi.number()
+                        .min(minLength || -Infinity)
+                        .max(maxLength || Infinity);
+                    break;
+                case 'boolean':
+                    fieldSchema = Joi.boolean();
+                    break;
+                case 'date':
+                    fieldSchema = Joi.date();
+                    break;
+                case 'array':
+                    fieldSchema = Joi.array()
+                        .items(Joi.any()); // You may want to specify the types of items within the array
+                    break;
+                case 'object':
+                    fieldSchema = Joi.object();
+                    break;
+                case 'string': case '':
+                    fieldSchema = Joi.string()
+                        .min(minLength)
+                        .max(maxLength)
+                        .pattern(new RegExp(pattern || '.*'));
+                    break;
+                case 'object':
+                    fieldSchema = Joi.object();
+                    break;
+                default:
+                    throw new Error(`Unsupported data type for field ${field}: ${dataType}`);
+            }
+            if (required) {
+                fieldSchema = fieldSchema.required();
+            }
 
-        //     const { error, value } = fieldSchema.validate(requestBody[field], { abortEarly: false });
+            const { error, value } = fieldSchema.validate(requestBody[field], { abortEarly: false });
+            // console.log('joi error----->', error,'joi value----->',value);
+            if (error) {
+                ErrorArr.push({
+                    field: field,
+                    message:error.details[0].message
+                });
+                // console.log('joi error----->', error.details[0].message);
+                // return response(message_error,STATUS_CODES.BAD_REQUEST);
+            }
 
-        //     if (error) {
-        //         const message_error = { message: error.details[0].message };
-        //         logError(message_error);
-        //         return response(message_error, STATUS_CODES.BAD_REQUEST);
-        //     }
-
-        //     userData[field] = value;
-        // }
-        return {
-            "success": true,
-            "message": "Validated Successfully",
-            "data": requestBody
-        };
-    } catch (err) {
-        console.error(`User Validation: ${err.message}`);
-        return {
-            "success": false,
-            "message": err.message,
-            "data": userData
-        };
-    }
+            userData[field] = value;
+        }
+        if (ErrorArr.length > 0) {
+            return {error : ErrorArr};
+        }
+        return userData;
+    // } catch (err) {
+    //     console.error(`Error: ${err.message}`);
+    //     return {};
+    // }
 };
 
 
