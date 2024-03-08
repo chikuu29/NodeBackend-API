@@ -60,7 +60,7 @@ const APIMiddleware = async (req, res, next) => {
         return next();
     } catch (err) {
         console.error('Exception in middleware', err);
-        message_error = { error: 'Exception in middleware', 'success': false, message: 'permission error' };
+        message_error = { error: err.message, 'success': false, message: 'middleware error' };
         logError({ ...message_error });
         return res.status(500).json(message_error);
     }
@@ -92,7 +92,7 @@ const isAllowed = async(req, tokenInfo) => {
         return Object.keys(apisAllowedRoles).some(role => userIdWithRoles[role]);
     } catch (err) {
         console.error('Exception in middleware', err);
-        message_error = { error: 'Exception in middleware', 'success': false, message: 'permission error' };
+        message_error = { error: err.message, 'success': false, message: 'middleware error' };
         logError({ ...message_error });
         return false;
     }

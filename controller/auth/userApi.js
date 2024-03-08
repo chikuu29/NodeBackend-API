@@ -86,7 +86,7 @@ exports.registerUser = async (req, res) => {
         }
     } catch (err) {
         console.error('error in registering user-->', err);
-        const message_error = { message: `Error in registering user`, success: false, error: err };
+        const message_error = { message: `Error in registering user`, success: false, error: err.message };
         logError({ ...message_error });
         return res.status(500).json(message_error);
     }
@@ -171,7 +171,7 @@ exports.forgotPasswordOnUserId = async (request, res) => {
         }
     } catch (err) {
         console.log('error in resetting user password-->', err);
-        const message_error = { message: 'Error in resetting user password: ', error: err, 'success': false };
+        const message_error = { message: 'Error in resetting user password: ', error: err.message, 'success': false };
         logError({ ...message_error });
         return res.status(500).json(message_error);
     }
@@ -263,7 +263,7 @@ exports.passWordResetVerification = async (request, res) => {
         }
     } catch (err) {
         console.log('error in resetting user password-->', err);
-        const message_error = { message: 'Error in resetting user password ', error: err, 'success': false };
+        const message_error = { message: 'Error in resetting user password ', error: err.message, 'success': false };
         logError({ ...message_error });
         return res.status(500).json(message_error);
     }
@@ -350,7 +350,7 @@ exports.loginUser = async (req, res) => {
         }
     } catch (err) {
         console.error('error in login user-->', err);
-        const message_error = { message: 'error in login user', error: err, 'success': false };
+        const message_error = { message: 'error in login user', error: err.message, 'success': false };
         logError({ ...message_error });
         return res.status(500).json(message_error);
     }
@@ -509,7 +509,7 @@ exports.updateUserEmail = async (request, res) => {
 
     } catch (err) {
         console.error('err--->', err);
-        message_error = { message: 'Error in update email', error: err, 'success': false };
+        message_error = { message: 'Error in update email', error: err.message, 'success': false };
         logError({ ...message_error });
         return res.status(500).json(message_error);
     }
@@ -611,7 +611,7 @@ exports.AssignRoleToUser = async (request, res) => {
         return res.status(200).json(message_info);
     } catch (err) {
         console.log('err--->', err);
-        message_error = { message: 'Error in AssignRoleToUser', error: err, 'success': false };
+        message_error = { message: 'Error in AssignRoleToUser', error: err.message, 'success': false };
         logError({ ...message_error });
         return res.status(500).json(message_error);
     }
@@ -663,7 +663,7 @@ exports.updateUserBasicData = async (request, res) => {
         return res.status(200).json(message_info);
     } catch (err) {
         console.log('Error in update basic data-->', err);
-        message_error = { message: 'Error in update basic data', error: err, 'success': false };
+        message_error = { message: 'Error in update basic data', error: err.message, 'success': false };
         logError({ ...message_error });
         return res.status(500).json(message_error);
     }
