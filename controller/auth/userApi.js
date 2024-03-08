@@ -47,15 +47,15 @@ exports.registerUser = async (req, res) => {
     try {
         // console.log('req.body :', req.body);
         if (!req.body || !req.body.projectName) {
-            const message_error = { message: 'Please provide Project Name' };
-            logError({...message_error});
+            const message_error = { error: 'Please provide Project Name', 'success': false, message: 'input error' };
+            logError({ ...message_error });
             return res.status(400).json(message_error);
         }
 
         const { projectName } = req.body;
         if (!apiRequirementsConfig[projectName]) {
-            const message_error = { message: 'projectName does not exist' };
-            logError({...message_error});
+            const message_error = { error: 'projectName does not exist', 'success': false, message: 'input error' };
+            logError({ ...message_error });
             return res.status(400).json(message_error);
         }
 
@@ -64,10 +64,10 @@ exports.registerUser = async (req, res) => {
 
         const userData = requestDataInjectionCheck(userFields, userFieldsConfig, req.body);
         if (userData.error) {
-            const message_error = { message: JSON.stringify(userData.error) };
-            logError({...message_error});
+            const message_error = { message: 'input error', error: JSON.stringify(userData.error), 'success': false };
+            logError({ ...message_error });
             return res.status(500).json(message_error);
-        } 
+        }
         // console.log('userData :', userData);
         const existingUser = await mongoDBManagerObj.findDocuments(mongoConfig[projectName].userCol, { userName: userData.userName }, {});
         if (existingUser.length === 0) {
@@ -76,18 +76,18 @@ exports.registerUser = async (req, res) => {
 
 
             await mongoDBManagerObj.insertDocument(mongoConfig[projectName].userCol, userData);
-            const message_info = { message: `User: ${userData.userName} registered successfully`, projectName };
-             logInfo({...message_info});
+            const message_info = { message: `User: ${userData.userName} registered successfully`, projectName, 'success': true, data: userData };
+            logInfo({ ...message_info });
             return res.status(200).json(message_info);
         } else {
-            const message_info = { message: `User: ${userData.userName} already exists`, projectName };
-             logInfo({...message_info});
+            const message_info = { error: `User: ${userData.userName} already exists`, projectName, 'success': false, message: 'User already exists' };
+            logInfo({ ...message_info });
             return res.status(409).json(message_info);
         }
     } catch (err) {
         console.error('error in registering user-->', err);
-        const message_error = { message: `Error in registering user: ${err}` };
-        logError({...message_error});
+        const message_error = { message: `Error in registering user`, success: false, error: err };
+        logError({ ...message_error });
         return res.status(500).json(message_error);
     }
 };
@@ -95,8 +95,8 @@ exports.registerUser = async (req, res) => {
 exports.forgotPasswordOnUserId = async (request, res) => {
     try {
         if (!request || !request.body || !request.body.projectName) {
-            const message_error = { message: 'Please provide Project Name' };
-            logError({...message_error});
+            const message_error = { error: 'Please provide Project Name', 'success': false, message: 'input error' };
+            logError({ ...message_error });
             return res.status(400).json(message_error);
         }
 
@@ -104,19 +104,19 @@ exports.forgotPasswordOnUserId = async (request, res) => {
         console.log('-----1', projectName);
 
         if (!apiRequirementsConfig[projectName]) {
-            const message_error = { message: 'projectName does not exist' };
-            logError({...message_error});
+            const message_error = { error: 'projectName does not exist', success: false, message: 'input error' };
+            logError({ ...message_error });
             return res.status(400).json(message_error);
         }
 
         const userFieldsConfig = apiRequirementsConfig[projectName]['forgotPassword'];
         const userFields = Object.keys(userFieldsConfig);
         console.log('-----3', userFields);
-    
+
         const userData = requestDataInjectionCheck(userFields, userFieldsConfig, req.body);
         if (userData.error) {
-            const message_error = { message: JSON.stringify(userData.error) };
-            logError({...message_error});
+            const message_error = { message: 'input error', error: JSON.stringify(userData.error), 'success': false };
+            logError({ ...message_error });
             return res.status(500).json(message_error);
         }
 
@@ -124,8 +124,8 @@ exports.forgotPasswordOnUserId = async (request, res) => {
 
         if (dbUserDataArr.length === 0) {
             console.log("User doesn't exists");
-            const message_info = { message: `User: ${userData['userName']} does not exist`, 'projectName': projectName };
-             logInfo({...message_info});
+            const message_info = { error: `User: ${userData['userName']} does not exist`, 'projectName': projectName, 'success': false, message: 'User does not exist' };
+            logInfo({ ...message_info });
             return res.status(404).json(message_info);
         } else {
             const dbUserData = dbUserDataArr[0];
@@ -143,8 +143,8 @@ exports.forgotPasswordOnUserId = async (request, res) => {
                 dbUserData['pwdReset'] = pwdReset;
             } else {
                 if (DateTime.now() < (pwdReset['blockedTillMulForgotTimeStamp'] || DateTime.now())) {
-                    const message_info = { message: `User: ${userData['userName']} is blocked for password verification till ${pwdReset['blockedTillMulForgotTimeStamp'] || DateTime.now()}`, 'projectName': projectName };
-                     logInfo({...message_info});
+                    const message_info = { error: `User: ${userData['userName']} is blocked for password verification till ${pwdReset['blockedTillMulForgotTimeStamp'] || DateTime.now()}`, 'projectName': projectName, 'success': false, message: 'User is blocked for password verification' };
+                    logInfo({ ...message_info });
                     return res.status(200).json(message_info);
                 } else {
                     pwdReset['otp'] = otp;
@@ -165,14 +165,14 @@ exports.forgotPasswordOnUserId = async (request, res) => {
             console.log('------5');
             await mongoDBManagerObj.updateDocument(mongoConfig[projectName]['userCol'], { 'userName': dbUserData['userName'] }, { '$set': dbUserData });
 
-            const message_info = { message: `User: ${userData['userName']} Otp sent to your registered email`, 'projectName': projectName };
-             logInfo({...message_info});
+            const message_info = { message: `User: ${userData['userName']} Otp sent to your registered email`, 'projectName': projectName, 'success': true };
+            logInfo({ ...message_info });
             return res.status(200).json(message_info);
         }
     } catch (err) {
         console.log('error in resetting user password-->', err);
-        const message_error = { message: 'Error in resetting user password: ' + err };
-        logError({...message_error});
+        const message_error = { message: 'Error in resetting user password: ', error: err, 'success': false };
+        logError({ ...message_error });
         return res.status(500).json(message_error);
     }
 
@@ -181,8 +181,8 @@ exports.forgotPasswordOnUserId = async (request, res) => {
 exports.passWordResetVerification = async (request, res) => {
     try {
         if (!request || !request.body || !request.body.projectName) {
-            const message_error = { message: 'Please provide Project Name' };
-            logError({...message_error});
+            const message_error = { error: 'Please provide Project Name', 'success': false, message: 'input error' };
+            logError({ ...message_error });
             return res.status(400).json(message_error);
         }
 
@@ -190,19 +190,19 @@ exports.passWordResetVerification = async (request, res) => {
         console.log('-----1', projectName);
 
         if (!apiRequirementsConfig[projectName]) {
-            const message_error = { message: 'projectName does not exist' };
-            logError({...message_error});
+            const message_error = { error: 'projectName does not exist', 'success': false, message: 'input error' };
+            logError({ ...message_error });
             return res.status(400).json(message_error);
         }
 
         const userFieldsConfig = apiRequirementsConfig[projectName]['passWordReset'];
         const userFields = Object.keys(userFieldsConfig);
         console.log('-----3', userFields);
-    
+
         const userData = requestDataInjectionCheck(userFields, userFieldsConfig, req.body);
         if (userData.error) {
-            const message_error = { message: JSON.stringify(userData.error) };
-            logError({...message_error});
+            const message_error = { message: 'input error', error: JSON.stringify(userData.error), 'success': false };
+            logError({ ...message_error });
             return res.status(500).json(message_error);
         }
         console.log('-----5', userData);
@@ -212,27 +212,27 @@ exports.passWordResetVerification = async (request, res) => {
 
         if (Object.keys(userDb).length === 0) {
             console.log("User doesn't exist");
-            const message_error = { message: `User: ${userData['userName']} does not exist`, 'projectName': projectName };
-            logError({...message_error});
+            const message_error = { error: `User: ${userData['userName']} does not exist`, 'projectName': projectName, 'success': false, message: 'User does not exist' };
+            logError({ ...message_error });
             return res.status(404).json(message_error);
         } else {
             console.log("User exists");
             const pwdresetData = userDb['pwdReset'] || {};
 
             if (Object.keys(pwdresetData).length === 0) {
-                const message_error = { message: `User: ${userData['userName']} does not have otp`, 'projectName': projectName };
-                logError({...message_error});
+                const message_error = { error: `User: ${userData['userName']} does not have otp`, 'projectName': projectName, 'success': false, message: 'User does not have otp' };
+                logError({ ...message_error });
                 return res.status(400).json(message_error);
             }
 
             if (pwdresetData['blockedTillMulForgotTimeStamp'] !== null && DateTime.now() < (pwdresetData['blockedTillMulForgotTimeStamp'] || DateTime.now())) {
-                const message_info = { message: `User: ${userData['userName']} blocked due to multiple otp fail attempts till ${pwdresetData['blockedTillMulForgotTimeStamp']}`, 'projectName': projectName };
-                 logInfo({...message_info});
+                const message_info = { error: `User: ${userData['userName']} blocked due to multiple otp fail attempts till ${pwdresetData['blockedTillMulForgotTimeStamp']}`, 'projectName': projectName, 'success': false, message: 'User is blocked for password verification' };
+                logInfo({ ...message_info });
                 return res.status(400).json(message_info);
             }
 
             if ((DateTime.now() - new Date(pwdresetData['otpTimeStamp'])) > otherConfig[projectName]['verifyUser']['blockedTillEmailMinutes'] * 60000) {
-                return res.status(400).json({ message: 'Otp expired' });
+                return res.status(400).json({ error: 'Otp expired', 'projectName': projectName, 'success': false, message: 'Otp expired' });
             }
 
             if ((DateTime.now() - new Date(pwdresetData['otpTimeStamp'])) < 5 * 60000) {
@@ -244,8 +244,8 @@ exports.passWordResetVerification = async (request, res) => {
                     }
                     userDb['pwdReset'] = pwdresetData;
                     await mongoDBManagerObj.updateDocument(mongoConfig[projectName]['userCol'], { 'userName': userData['userName'] }, { '$set': userDb });
-                    const message_error = { message: `User: ${userData['userName']} Invalid otp`, 'projectName': projectName };
-                    logError({...message_error});
+                    const message_error = { error: `User: ${userData['userName']} Invalid otp`, 'projectName': projectName, 'success': false, message: 'Invalid otp' };
+                    logError({ ...message_error });
                     return res.status(400).json(message_error);
                 } else {
                     pwdresetData['passWordResetVefFailAttempt'] = 0;
@@ -255,16 +255,16 @@ exports.passWordResetVerification = async (request, res) => {
                     pwdresetData['password'] = hashed_password;
                     userDb['pwdReset'] = pwdresetData;
                     await mongoDBManagerObj.updateDocument(mongoConfig[projectName]['userCol'], { 'userName': userData['userName'] }, { '$set': userDb });
-                    const message_info = { message: `User: ${userData['userName']} Password reset successfully`, 'projectName': projectName };
-                     logInfo({...message_info});
+                    const message_info = { message: `User: ${userData['userName']} Password reset successfully`, 'projectName': projectName, 'success': true };
+                    logInfo({ ...message_info });
                     return res.status(200).json(message_info);
                 }
             }
         }
     } catch (err) {
         console.log('error in resetting user password-->', err);
-        const message_error = { message: 'Error in resetting user password ' + err };
-        logError({...message_error});
+        const message_error = { message: 'Error in resetting user password ', error: err, 'success': false };
+        logError({ ...message_error });
         return res.status(500).json(message_error);
     }
 
@@ -276,13 +276,13 @@ exports.loginUser = async (req, res) => {
         const requestData = req.body;
 
         if (!requestData || !requestData || !requestData.projectName) {
-            return res.status(400).json({ message: 'Please provide Project Name' });
+            return res.status(400).json({ error: 'Please provide Project Name', 'success': false, message: 'Input error' });
         }
 
         const projectName = requestData.projectName;
 
         if (!apiRequirementsConfig[projectName]) {
-            return res.status(400).json({ message: 'projectName does not exist' });
+            return res.status(400).json({ error: 'projectName does not exist', 'success': false, message: 'Input error' });
         }
 
         const userFieldsConfig = apiRequirementsConfig[projectName]['loginFields'];
@@ -290,8 +290,8 @@ exports.loginUser = async (req, res) => {
 
         const userData = requestDataInjectionCheck(userFields, userFieldsConfig, req.body);
         if (userData.error) {
-            const message_error = { message: JSON.stringify(userData.error) };
-            logError({...message_error});
+            const message_error = { message: 'input error', error: JSON.stringify(userData.error), 'success': false };
+            logError({ ...message_error });
             return res.status(500).json(message_error);
         }
 
@@ -299,7 +299,7 @@ exports.loginUser = async (req, res) => {
 
         if (storedData.length === 0) {
             console.log("User doesn't exists");
-            return res.status(404).json({ message: 'User does not exist' });
+            return res.status(404).json({ error: 'User does not exist', 'success': false, message: 'User does not exist' });
         } else {
             console.log("User exists");
             const storedHashedPassword = storedData[0].password;
@@ -307,7 +307,7 @@ exports.loginUser = async (req, res) => {
 
             if (storedData[0].blockTillLogInTimeStamp > DateTime.now()) {
                 console.log("User is blocked till", storedData[0].blockTillLogInTimeStamp);
-                return res.status(200).json({ message: 'User is blocked' });
+                return res.status(200).json({ message: 'User is blocked', 'success': false, message: 'User is blocked' });
             }
 
             if (bcrypt.compareSync(providedPassword, storedHashedPassword)) {
@@ -318,7 +318,8 @@ exports.loginUser = async (req, res) => {
                 };
                 const tokens = generateTokens(payload, otherConfig[projectName]['tokenConfig']['secretKey'], otherConfig[projectName]['tokenConfig']['acess_expiration_delta'], otherConfig[projectName]['tokenConfig']['refresh_expiration_delta']);
 
-                const response = { message: 'Login successful' };
+                const message_info = { message: 'Login successful', 'success': true };
+                logInfo({ ...message_info });
                 // Set access token in the response headers
                 res.setHeader('Authorization', `Bearer ${tokens.access_token}`);
                 // Set refresh token in a secure cookie
@@ -332,7 +333,7 @@ exports.loginUser = async (req, res) => {
                         path: '/refresh-token/' // Set a specific path for the refresh token cookie
                     }
                 );
-                return res.status(200).json(response);
+                return res.status(200).json(message_info);
             } else {
                 // Handle incorrect password case
                 if (storedData[0].numOfLoginFailAttempt >= otherConfig[projectName]['verifyUser']['numOfLoginFailAttempt']) {
@@ -342,12 +343,16 @@ exports.loginUser = async (req, res) => {
                 const updateDataTemp = { numOfLoginFailAttempt: storedData[0].numOfLoginFailAttempt + 1 };
                 await mongoDBManagerObj.updateDocument(mongoConfig[projectName]['userCol'], { 'userName': userData['userName'] }, { '$set': updateDataTemp });
                 console.log("Incorrect password");
-                return res.status(401).json({ message: 'Incorrect password' });
+                let message_error = { message: 'Incorrect password', 'success': false, error: 'Incorrect password' };
+                logError({ ...message_error });
+                return res.status(401).json(message_error);
             }
         }
     } catch (err) {
         console.error('error in login user-->', err);
-        return res.status(500).json({ message: 'Error in login user' });
+        const message_error = { message: 'error in login user', error: err, 'success': false };
+        logError({ ...message_error });
+        return res.status(500).json(message_error);
     }
 }
 
@@ -361,8 +366,8 @@ exports.emailVerifyUser = async (req, res) => {
 
         const userData = requestDataInjectionCheck(userFields, userFieldsConfig, req.body);
         if (userData.error) {
-            const message_error = { message: JSON.stringify(userData.error) };
-            logError({...message_error});
+            const message_error = { message: 'input error', error: JSON.stringify(userData.error), 'success': false };
+            logError({ ...message_error });
             return res.status(500).json(message_error);
         }
 
@@ -370,60 +375,79 @@ exports.emailVerifyUser = async (req, res) => {
         const userName = tokenInfo.userName;
 
         if (userName !== userData.userName) {
-            return res.status(400).json({ message: 'wrong token' });
+            message_error = { message: 'userName mismatch', error: 'userName mismatch', 'success': false };
+            logError({ ...message_error });
+            return res.status(400).json(message_error);
         }
 
         const userDataFromDbArr = await mongoDBManagerObj.findDocuments(mongoConfig[projectName].userCol, { 'userName': userData.userName }, {});
         const userDataFromDb = userDataFromDbArr.length > 0 ? userDataFromDbArr[0] : {};
 
         if (Object.keys(userDataFromDb).length === 0) {
-            return res.status(404).json({ message: 'User not found' });
+            message_error = { message: 'user not found', error: 'user not found', 'success': false, error: 'user not found' };
+            logError({ ...message_error });
+            return res.status(404).json(message_error);
         }
 
         const emailVefData = userDataFromDb.emailVefData || {};
 
         if (emailVefData.otpTimeStamp < DateTime.now().minus({ minutes: otherConfig[projectName].verifyUser.otpExpiration }).toJSDate()) {
-            return res.status(400).json({ message: 'otp expired' });
+            message_error = { message: 'otp expired', error: 'otp expired', 'success': false, error: 'otp expired' };
+            logError({ ...message_error });
+            return res.status(400).json(message_error);
         }
 
         if (userDataFromDb.email !== userData.email) {
-            return res.status(400).json({ message: 'Wrong email' });
+            message_error = { message: 'email mismatch', error: 'email mismatch', 'success': false, error: 'email mismatch' };
+            logError({ ...message_error });
+            return res.status(400).json(message_error);
         }
 
         if (emailVefData.blockedTillEmailVefTimeStamp > DateTime.now().toJSDate()) {
-            return res.status(400).json({ message: 'User blocked till' + emailVefData.blockedTillEmailVefTimeStamp });
-        }
+            message_error = { message: 'user blocked', error: 'user blocked', 'success': false, error: 'User blocked till' + emailVefData.blockedTillEmailVefTimeStamp };
+        logError({ ...message_error });
+        return res.status(400).json(message_error);
+    }
 
         if (emailVefData.otp !== userData.otp) {
-            if (emailVefData.numOfEmailVefFailAttempt >= otherConfig[projectName].verifyUser.numOfEmailVefFailAttempt) {
-                const updateDataTemp = { 'emailVefData.blockedTillEmailVefTimeStamp': DateTime.now().plus({ minutes: otherConfig[projectName].verifyUser.blockedTillEmailMinutes }).toJSDate() };
-                await mongoDBManagerObj.updateDocument(mongoConfig[projectName].userCol, { 'userName': userData.userName }, { '$set': updateDataTemp });
-                return res.status(400).json({ message: 'Maximum number of failed attempts reached' });
-            }
-
-            const updateDataTemp = { 'emailVefData.numOfEmailVefFailAttempt': userDataFromDb.emailVefData.numOfEmailVefFailAttempt + 1 };
+        if (emailVefData.numOfEmailVefFailAttempt >= otherConfig[projectName].verifyUser.numOfEmailVefFailAttempt) {
+            const updateDataTemp = { 'emailVefData.blockedTillEmailVefTimeStamp': DateTime.now().plus({ minutes: otherConfig[projectName].verifyUser.blockedTillEmailMinutes }).toJSDate() };
             await mongoDBManagerObj.updateDocument(mongoConfig[projectName].userCol, { 'userName': userData.userName }, { '$set': updateDataTemp });
-            return res.status(400).json({ message: 'Wrong otp' });
+            message_error = { message: 'Maximum number of failed attempts reached', error: 'Maximum number of failed attempts reached', 'success': false, error: 'Maximum number of failed attempts reached' };
+            logError({ ...message_error });
+            return res.status(400).json(message_error);
         }
 
-        if (emailVefData.otp === userData.otp && userDataFromDb.email === userData.email) {
-            if (emailVefData.verified === true) {
-                return res.status(400).json({ message: 'User already verified' });
-            } else {
-                const updateDataTemp = {
-                    'emailVefData.verified': true,
-                    'emailVefData.numOfEmailVefFailAttempt': 0,
-                    'emailVefData.otpTimeStamp': DateTime.now().toJSDate(),
-                    'emailVefData.blockedTillEmailVefTimeStamp': DateTime.now().toJSDate()
-                };
-                await mongoDBManagerObj.updateDocument(mongoConfig[projectName].userCol, { 'userName': userData.userName }, { '$set': updateDataTemp });
-                return res.status(200).json({ message: 'User verified successfully' });
-            }
-        }
-    } catch (err) {
-        console.error('err--->', err);
-        return res.status(500).json({ message: 'Error in verify user' });
+        const updateDataTemp = { 'emailVefData.numOfEmailVefFailAttempt': userDataFromDb.emailVefData.numOfEmailVefFailAttempt + 1 };
+        await mongoDBManagerObj.updateDocument(mongoConfig[projectName].userCol, { 'userName': userData.userName }, { '$set': updateDataTemp });
+        message_error = { message: 'Wrong otp', error: 'Wrong otp', 'success': false, error: 'Wrong otp' };
+        logError({ ...message_error });
+        return res.status(400).json(message_error);
     }
+
+    if (emailVefData.otp === userData.otp && userDataFromDb.email === userData.email) {
+        if (emailVefData.verified === true) {
+            message_error = { message: 'User already verified', error: 'User already verified', 'success': false, error: 'User already verified' };
+            logError({ ...message_error });
+            return res.status(400).json(message_error);
+        } else {
+            const updateDataTemp = {
+                'emailVefData.verified': true,
+                'emailVefData.numOfEmailVefFailAttempt': 0,
+                'emailVefData.otpTimeStamp': DateTime.now().toJSDate(),
+                'emailVefData.blockedTillEmailVefTimeStamp': DateTime.now().toJSDate()
+            };
+            await mongoDBManagerObj.updateDocument(mongoConfig[projectName].userCol, { 'userName': userData.userName }, { '$set': updateDataTemp });
+            message_error = { message: 'User verified successfully', error: 'User verified successfully', 'success': true };
+            return res.status(200).json(message_error);
+        }
+    }
+} catch (err) {
+    console.error('err--->', err);
+    message_error = { message: 'Error in verify user', error: 'Error in verify user', 'success': false };
+    logError({ ...message_error });
+    return res.status(500).json(message_error);
+}
 }
 
 exports.updateUserEmail = async (request, res) => {
@@ -434,11 +458,11 @@ exports.updateUserEmail = async (request, res) => {
         const userFieldsConfig = apiRequirementsConfig[projectName]['changeEmail'];
         const userFields = Object.keys(userFieldsConfig);
         console.log('-----3', userFields);
-    
+
         const userData = requestDataInjectionCheck(userFields, userFieldsConfig, req.body);
         if (userData.error) {
-            const message_error = { message: JSON.stringify(userData.error) };
-            logError({...message_error});
+            const message_error = { message: 'input error', error: JSON.stringify(userData.error), 'success': false };
+            logError({ ...message_error });
             return res.status(500).json(message_error);
         }
 
@@ -449,7 +473,8 @@ exports.updateUserEmail = async (request, res) => {
         const userName = tokenInfo.userName;
 
         if (userName !== userData.userName) {
-            return res.status(400).json({ message: 'wrong token' });
+            message_error = { message: 'wrong token', 'success': false, error: 'user name mismatch/wrong token' };
+            return res.status(400).json(message_error);
         }
 
         console.log('-----5', mongoConfig[projectName]['userCol']);
@@ -459,11 +484,13 @@ exports.updateUserEmail = async (request, res) => {
         console.log('-----6', userDataFromDb);
 
         if (!userDataFromDb) {
-            return res.status(404).json({ message: 'User not found' });
+            message_error = { message: 'User not found', error: 'User not found', 'success': false };
+            return res.status(404).json(message_error);
         }
 
         if (userDataFromDb.email === userData.newEmail) {
-            return res.status(400).json({ message: 'same  email id cannot update' });
+            message_error = { message: 'same  email id cannot update', error: 'same  email id cannot update', 'success': false };
+            return res.status(400).json(message_error);
         }
 
         console.log('-----7');
@@ -476,10 +503,15 @@ exports.updateUserEmail = async (request, res) => {
         };
 
         await mongoDBManagerObj.updateDocument(mongoConfig[projectName]['userCol'], { userName: userData.userName }, { '$set': updateDataTemp });
-        return res.status(200).json({ message: 'Email added  successfully to verify call verifyUser api' });
+        message_info = { message: 'Email added  successfully to verify call verifyUser api', 'success': true };
+        logInfo({ ...message_info });
+        return res.status(200).json(message_info);
 
     } catch (err) {
-        return res.status(500).json({ message: 'Error in update email' });
+        console.error('err--->', err);
+        message_error = { message: 'Error in update email', error: err, 'success': false };
+        logError({ ...message_error });
+        return res.status(500).json(message_error);
     }
 
 }
@@ -487,18 +519,24 @@ exports.updateUserEmail = async (request, res) => {
 exports.getNewAcessToken = async (request, res) => {
     try {
         if (!request || !request.body || !request.body.projectName) {
-            return res.status(400).json({ message: 'Please provide Project Name' });
+            message_error = { message: 'Please provide projectName', error: 'Please provide projectName', 'success': false };
+            logError({ ...message_error });
+            return res.status(400).json(message_error);
         }
 
         const projectName = request.body.projectName;
         console.log('-----1', projectName);
 
         if (!apiRequirementsConfig[projectName]) {
-            return res.status(400).json({ message: 'projectName does not exist' });
+            message_error = { message: 'projectName does not exist', error: 'projectName does not exist', 'success': false };
+            logError({ ...message_error });
+            return res.status(400).json(message_error);
         }
 
         if (!request.body.refresh_token) {
-            return res.status(400).json({ message: 'Please provide refresh token' });
+            message_error = { message: 'Please provide refresh token', error: 'Please provide refresh token', 'success': false };
+            logError({ ...message_error });
+            return res.status(400).json(message_error);
         }
 
         const refresh_tokenArr = request.body.refresh_token.split('refresh_token=');
@@ -508,7 +546,9 @@ exports.getNewAcessToken = async (request, res) => {
         const acessToken = getNewAccessToken(refresh_token, otherConfig[projectName]['tokenConfig']['secretKey'], otherConfig[projectName]['tokenConfig']['acess_expiration_delta']);
 
         if (!acessToken) {
-            return res.status(400).json({ message: 'Please provide valid refresh token' });
+            message_error = { message: 'Please provide valid refresh token', error: 'Please provide valid refresh token', 'success': false };
+            logError({ ...message_error });
+            return res.status(400).json(message_error);
         }
         res.setHeader('Authorization', `Bearer ${acessToken}`);
         return res.status(200).json({ message: 'Token Refreshed', access_token: acessToken });
@@ -522,22 +562,26 @@ exports.getNewAcessToken = async (request, res) => {
 exports.AssignRoleToUser = async (request, res) => {
     try {
         if (!request || !request.body || !request.body.projectName) {
-            return res.status(400).json({ message: 'Please provide Project Name' });
+            message_error = { message: 'Please provide projectName', error: 'Please provide projectName', 'success': false };
+            logError({ ...message_error });
+            return res.status(400).json(message_error);
         }
 
         const projectName = request.body.projectName;
 
         if (!apiRequirementsConfig[projectName]) {
-            return res.status(400).json({ message: 'projectName does not exist' });
+            message_error = { message: 'projectName does not exist', error: 'projectName does not exist', 'success': false };
+            logError({ ...message_error });
+            return res.status(400).json(message_error);
         }
 
         const userFieldsConfig = apiRequirementsConfig[projectName]['AssignRoleToUser'];
         const userFields = Object.keys(userFieldsConfig);
-    
+
         const userData = requestDataInjectionCheck(userFields, userFieldsConfig, req.body);
         if (userData.error) {
-            const message_error = { message: JSON.stringify(userData.error) };
-            logError({...message_error});
+            const message_error = { message: 'input error', error: JSON.stringify(userData.error), 'success': false };
+            logError({ ...message_error });
             return res.status(500).json(message_error);
         }
 
@@ -547,22 +591,29 @@ exports.AssignRoleToUser = async (request, res) => {
 
         const rolesArr = await mongoDBManagerObj.findDocuments(mongoConfig[projectName]['apiSettings'], { settingName: "ApisAllowedRoles" }, {});
         if (rolesArr.length === 0 || !rolesArr[0][assignedRoleName]) {
-            return res.status(400).json({ message: `Invalid role name ${assignedRoleName}` });
+            message_error = { message: `Invalid role name ${assignedRoleName}`, error: `Invalid role name ${assignedRoleName}`, 'success': false };
+            logError({ ...message_error });
+            return res.status(400).json(message_error);
         }
 
         const tokenInfo = request.tokenInfo;
         const tokenUserName = tokenInfo.userName;
 
         if (tokenUserName !== userData.userName) {
-            return res.status(400).json({ message: 'wrong token' });
+            message_error = { message: 'wrong token', error: 'wrong token', 'success': false };
+            logError({ ...message_error });
+            return res.status(400).json(message_error);
         }
 
         await mongoDBManagerObj.updateDocument(mongoConfig[projectName]['apiSettings'], { settingName: "userIdWithRoles" }, { '$push': { 'role': userData.role } });
-
-        return res.status(200).json({ message: 'Role Assigned' });
+        message_info = { message: 'Role Assigned', 'success': true };
+        logInfo({ ...message_info });
+        return res.status(200).json(message_info);
     } catch (err) {
         console.log('err--->', err);
-        return res.status(500).json({ message: 'Error in AssignRoleToUser' });
+        message_error = { message: 'Error in AssignRoleToUser', error: err, 'success': false };
+        logError({ ...message_error });
+        return res.status(500).json(message_error);
     }
 
 }
@@ -575,11 +626,11 @@ exports.updateUserBasicData = async (request, res) => {
         const userFieldsConfig = apiRequirementsConfig[projectName]['changeBasicData'];
         const userFields = Object.keys(userFieldsConfig);
         console.log('-----3', userFields);
-    
+
         const userData = requestDataInjectionCheck(userFields, userFieldsConfig, req.body);
         if (userData.error) {
-            const message_error = { message: JSON.stringify(userData.error) };
-            logError({...message_error});
+            const message_error = { message: 'input error', error: JSON.stringify(userData.error), 'success': false };
+            logError({ ...message_error });
             return res.status(500).json(message_error);
         }
 
@@ -588,7 +639,9 @@ exports.updateUserBasicData = async (request, res) => {
         const userName = tokenInfo['userName'];
 
         if (userName !== userData['userName']) {
-            return res.status(400).json({ message: 'wrong token' });
+            message_error = { message: 'wrong token', error: 'wrong token', 'success': false };
+            logError({ ...message_error });
+            return res.status(400).json(message_error);
         }
 
         console.log('-----5', mongoConfig[projectName]['userCol']);
@@ -597,17 +650,22 @@ exports.updateUserBasicData = async (request, res) => {
 
         console.log('-----6', userDataFromDb);
         if (!userDataFromDb) {
-            return res.status(404).json({ message: 'User not found' });
+            message_error = { message: 'User not found', error: 'User not found', 'success': false };
+            logError({ ...message_error });
+            return res.status(404).json(message_error);
         }
 
         console.log('-----7');
         const updateDataTemp = userData;
         await mongoDBManagerObj.updateDocument(mongoConfig[projectName]['userCol'], { 'userName': userData['userName'] }, { '$set': updateDataTemp });
-
-        return res.status(200).json({ message: 'user Basic data updated successfully' });
+        message_info = { message: 'User Basic data updated successfully', 'success': true ,data:userData};
+        logInfo({ ...message_info });
+        return res.status(200).json(message_info);
     } catch (err) {
         console.log('Error in update basic data-->', err);
-        return res.status(500).json({ message: 'Error in update basic data' });
+        message_error = { message: 'Error in update basic data', error: err, 'success': false };
+        logError({ ...message_error });
+        return res.status(500).json(message_error);
     }
 
 }

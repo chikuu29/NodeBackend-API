@@ -1,3 +1,4 @@
+const { log } = require('util');
 const { readJsonFiles, checkValidKeyInDictionary, validateAccessToken } = require('../commonServices/commonOperation');
 const MongoDBManager = require('../commonServices/mongoServices');
 const otherConfig = readJsonFiles('./applicationConfig/otherFeaturesConfigs.json');
@@ -16,38 +17,52 @@ const APIMiddleware = async (req, res, next) => {
         const projectName = requestBody.projectName;
         console.log('apikey--', apiKey, 'projectName--', projectName)
         if (!apiKey || !projectName) {
-            return res.status(400).json({ message: 'Please provide apiKey & projectName', status: 400 });
+            message_error = { error: 'Please provide apiKey & projectName', 'success': false, message: 'input error' };
+            logError({ ...message_error });
+            return res.status(400).json(message_error);
         }
         if (!apiRequirementsConfig[projectName]) {
-            return res.status(400).json({ message: 'projectName does not exist', status: 400 });
+            message_error = { error: 'projectName does not exist', 'success': false, message: 'input error' };
+            logError({ ...message_error });
+            return res.status(400).json(message_error);
         }
         if (apiKey !== otherConfig[projectName].apiKey) {
-            return res.status(403).json({ error: 'Access Forbidden', status: 403 });
+            message_error = { error: 'Invalid apiKey', 'success': false, message: 'input error' };
+            logError({ ...message_error });
+            return res.status(400).json(message_error);
         }
         console.log('request.path', req.path);
         if (req.path.startsWith('/Auth/')) {
             if (!apiRequirementsConfig[projectName]) {
-                return res.status(400).json({ message: 'projectName does not exist', status: 403 });
+                message_error = { error: 'projectName does not exist', 'success': false, message: 'input error' };
+                logError({ ...message_error });
+                return res.status(400).json(message_error);
             }
             const accessToken = req.headers.authorization.split('Bearer ').pop();
             const tokenInfo = validateAccessToken(accessToken, otherConfig[projectName].tokenConfig.secretKey);
             if (tokenInfo) {
                 if (req.path.startsWith('/Auth/roleAccess/')) {
                     if (!await isAllowed(req, tokenInfo)) {
-                        return res.status(403).json({ error: 'Access Forbidden', errorCode: 403 });
+                        message_error = { error: 'Access Forbidden', 'success': false, message: 'permission error' };
+                        logError({ ...message_error });
+                        return res.status(403).json(message_error);
                     }
                 }
                 req.tokenInfo = tokenInfo;
                 return next();
             } else {
-                return res.status(401).json({ error: 'Invalid or expired access token', errorCode: 401 });
+                message_error = { error: 'Invalid or expired access token', 'success': false, message: 'permission error' };
+                logError({ ...message_error });
+                return res.status(403).json(message_error);
             }
         }
         // Pass the request to the next middleware or route handler
         return next();
     } catch (err) {
         console.error('Exception in middleware', err);
-        return res.status(500).json({ error: 'Internal Server Error', status: 500 });
+        message_error = { error: 'Exception in middleware', 'success': false, message: 'permission error' };
+        logError({ ...message_error });
+        return res.status(500).json(message_error);
     }
 };
 
@@ -77,6 +92,8 @@ const isAllowed = async(req, tokenInfo) => {
         return Object.keys(apisAllowedRoles).some(role => userIdWithRoles[role]);
     } catch (err) {
         console.error('Exception in middleware', err);
+        message_error = { error: 'Exception in middleware', 'success': false, message: 'permission error' };
+        logError({ ...message_error });
         return false;
     }
 };
