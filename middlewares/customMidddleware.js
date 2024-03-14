@@ -1,5 +1,5 @@
 const { log } = require('util');
-const { readJsonFiles, checkValidKeyInDictionary, validateAccessToken } = require('../commonServices/commonOperation');
+const { readJsonFiles, checkValidKeyInDictionary, validateAccessToken,logError,logInfo,logWarning } = require('../commonServices/commonOperation');
 const MongoDBManager = require('../commonServices/mongoServices');
 const otherConfig = readJsonFiles('./applicationConfig/otherFeaturesConfigs.json');
 const apiRequirementsConfig = readJsonFiles('./applicationConfig/apiRequirements.json');
@@ -32,7 +32,7 @@ const APIMiddleware = async (req, res, next) => {
             return res.status(400).json(message_error);
         }
         console.log('request.path', req.path);
-        if (req.path.startsWith('/Auth/')) {
+        if (req.path.includes('/Auth/')) {
             if (!apiRequirementsConfig[projectName]) {
                 message_error = { error: 'projectName does not exist', 'success': false, message: 'input error' };
                 logError({ ...message_error });
@@ -41,7 +41,7 @@ const APIMiddleware = async (req, res, next) => {
             const accessToken = req.headers.authorization.split('Bearer ').pop();
             const tokenInfo = validateAccessToken(accessToken, otherConfig[projectName].tokenConfig.secretKey);
             if (tokenInfo) {
-                if (req.path.startsWith('/Auth/roleAccess/')) {
+                if (req.path.includes('/Auth/roleAccess/')) {
                     if (!await isAllowed(req, tokenInfo)) {
                         message_error = { error: 'Access Forbidden', 'success': false, message: 'permission error' };
                         logError({ ...message_error });
