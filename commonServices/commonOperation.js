@@ -67,7 +67,7 @@ const otherConfig = readJsonFiles('./applicationConfig/otherFeaturesConfigs.json
 let mongoDBManagerObj;
 setTimeout(() => {
     const MongoDBManager = require('./mongoServices');
-    mongoDBManagerObj = new MongoDBManager();   
+    mongoDBManagerObj = new MongoDBManager();
 }, 500);
 
 // Validate length
@@ -104,23 +104,29 @@ const intersection = (arr1, arr2) => {
 
 
 // Send email
-let emailAuth =( smtpServer = otherConfig['emailConfig'].smtp_server, smtpPort = otherConfig['emailConfig'].smtp_port, senderEmail = otherConfig['emailConfig'].sender_email, senderPassword = otherConfig['emailConfig'].sender_password)=>{
-    let transporter = nodemailer.createTransport({
-        host: smtpServer,
-        port: smtpPort,
-        secure: false, // true for 465, false for other ports
-        auth: {
-            user: senderEmail,
-            pass: senderPassword
-        }
-    });
-    return transporter;
+let emailAuth = (smtpServer = otherConfig['emailConfig'].smtp_server, smtpPort = otherConfig['emailConfig'].smtp_port, senderEmail = otherConfig['emailConfig'].sender_email, senderPassword = otherConfig['emailConfig'].sender_password) => {
+    try {
+        let transporter = nodemailer.createTransport({
+            host: smtpServer,
+            port: smtpPort,
+            secure: false, // true for 465, false for other ports
+            auth: {
+                user: senderEmail,
+                pass: senderPassword
+            }
+        });
+        return transporter;
+    }
+    catch (error) {
+        console.error('Error in creating transporter object:', error);
+        return null;
+    }
 }
 let transporterObj = emailAuth();
-async function sendEmail(subject, body, toEmail,retryId = 0,transporter=transporterObj, senderEmail = otherConfig['emailConfig'].sender_email) {
+async function sendEmail(subject, body, toEmail, retryId = 0, transporter = transporterObj, senderEmail = otherConfig['emailConfig'].sender_email) {
     try {
         // Create a SMTP transporter object
-        
+
 
         // Send mail with defined transport object
         let info = await transporter.sendMail({
@@ -136,17 +142,17 @@ async function sendEmail(subject, body, toEmail,retryId = 0,transporter=transpor
         console.log('Message sent: %s', info.messageId);
         return true;
     } catch (error) {
-        console.error('\nretryId :',retryId,'\n\nError in sending email:',error);
+        console.error('\nretryId :', retryId, '\n\nError in sending email:', error);
         if (retryId == 0) {
             // existing_data = mongoDBManagerObj.findDocuments(otherConfig["emailConfig"]['retryMailCol'], { '_id': retryId })
             // if (existing_data.length > 0) {
             //     console.log('Data already present. Skipping insertion.')
             // }
             // else {
-                retryObj = { "subject": subject, "body": body, "toEmail": toEmail, "timestamp": DateTime.now() }
-                mongoDBManagerObj.insertDocument(otherConfig["emailConfig"]['retryMailCol'], retryObj)
+            retryObj = { "subject": subject, "body": body, "toEmail": toEmail, "timestamp": DateTime.now() }
+            mongoDBManagerObj.insertDocument(otherConfig["emailConfig"]['retryMailCol'], retryObj)
             // }
-        }else{
+        } else {
             console.log('-----will retry to send mail in next attempt ----')
         }
         return false
