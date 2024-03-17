@@ -74,6 +74,19 @@ exports.registerUser = async (req, res) => {
             const hashed_password = await bcrypt.hash(userData.password, 10);
             userData.password = hashed_password;
 
+            const otp = Math.floor(100000 + Math.random() * 900000).toString();
+            const emailVefData = {
+                otp,
+                otpTimeStamp: DateTime.now(),
+                numOfEmailVefFailAttempt: 0,
+                blockedTillEmailVefTimeStamp: DateTime.now(),
+                verified: false,
+            };
+            userData.emailVefData = emailVefData;
+            userData['numOfLoginFailAttempt'] = 0
+            userData['blockTillLogInTimeStamp'] = DateTime.now()
+            // You need to implement the send_otp_email function
+            send_otp_email(userData.email, otp);
 
             await mongoDBManagerObj.insertDocument(mongoConfig[projectName].userCol, userData);
             const message_info = { message: `User: ${userData.userName} registered successfully`, projectName, 'success': true, data: userData };

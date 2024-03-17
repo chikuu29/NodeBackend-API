@@ -1,17 +1,17 @@
 {
-    "auth" :{
-        "user" : "cchiku1999",
-        "password" : "HY7R5luNs4LABt9s",
-        "databaseName" : "myMongoDB",
-        "authMechanism" : "SCRAM-SHA-256",
-        "port" : 27017,
-        "host" :"127.0.0.1"
-   },
-   "projectOne":{
-        "userCol":"user",
-        "passwordHashingKey":"fFFfvdscdd323434gfgf3frrgrht55454",
-        "threadCol":"threadOne",
-        "apiSettings":"apiSettings"
-   }
-   
-}
+     "auth" :{
+         "user" : "dynamicApp",
+         "password" : "dynamicApp",
+         "databaseName" : "databaseMongo",
+         "authMechanism" : "SCRAM-SHA-256",
+         "port" : 27017,
+         "host" :"127.0.0.1"
+    },
+    "projectOne":{
+         "userCol":"user",
+         "passwordHashingKey":"fFFfvdscdd323434gfgf3frrgrht55454",
+         "threadCol":"threadOne",
+         "apiSettings":"apiSettings"
+    }
+    
+ }

@@ -47,7 +47,7 @@ const decryptJsonFile = (filename, key) => {
 //     .catch(error => console.error("Decryption error:", error));
 
 
-const readJsonFiles = (filePath, readEncryptFile = false) => {
+const readJsonFiles = (filePath, readEncryptFile = readFromEncryptedFile) => {
     try {
         if (readEncryptFile) {
             return decryptJsonFile(filePath + '.enc', key);
@@ -63,6 +63,11 @@ const readJsonFiles = (filePath, readEncryptFile = false) => {
 
 // Read JSON files
 const otherConfig = readJsonFiles('./applicationConfig/otherFeaturesConfigs.json');
+let mongoDBManagerObj;
+setTimeout(() => {
+    const MongoDBManager = require('./mongoServices');
+    mongoDBManagerObj = new MongoDBManager();   
+}, 500);
 
 // Validate length
 const validateLength = (data, minLen, maxLen) => {
@@ -99,7 +104,7 @@ const intersection = (arr1, arr2) => {
 
 // Send email
 
-async function sendEmail(subject, body, toEmail, smtpServer = otherConfig['emailConfig'].smtp_server, smtpPort = otherConfig['emailConfig'].smtp_port, senderEmail = otherConfig['emailConfig'].sender_email, senderPassword = otherConfig['emailConfig'].sender_password) {
+async function sendEmail(subject, body, toEmail, smtpServer = otherConfig['emailConfig'].smtp_server, smtpPort = otherConfig['emailConfig'].smtp_port, senderEmail = otherConfig['emailConfig'].sender_email, senderPassword = otherConfig['emailConfig'].sender_password, retryId = null) {
     try {
         // Create a SMTP transporter object
         let transporter = nodemailer.createTransport({
@@ -119,12 +124,26 @@ async function sendEmail(subject, body, toEmail, smtpServer = otherConfig['email
             subject: subject,
             html: body
         });
+        if (retryId != null) {
+            mongoDBManagerObj.delete_document(otherConfig["emailConfig"]['retryMailCol'], { "to_email": to_email, subject: subject, body: body })
+        }
 
         console.log('Message sent: %s', info.messageId);
         return true;
     } catch (error) {
         console.error('Error in sending email:', error);
-        return false;
+        if (retryId != null) {
+            existing_data = mongoDBManagerObj.find_documents(otherConfig["emailConfig"]['retryMailCol'], { '_id': retryId })
+            if (existing_data.length > 0) {
+                print('Data already present. Skipping insertion.')
+            }
+            else {
+                retryObj = { "subject": subject, "body": body, "to_email": to_email, "timestamp": DateTime.now() }
+                mongoDBManagerObj.insert_document(otherConfig["emailConfig"]['retryMailCol'], retryObj)
+                print('Data to be inserted in retry mail-->', retryObj)
+            }
+        }
+        return False
     }
 }
 
@@ -249,69 +268,69 @@ const logInfo = (message_info) => {
 
 const requestDataInjectionCheck = (fields, fieldsConfig, requestBody) => {
     // try {
-        const userData = {};
-        let ErrorArr = [];
-        for (const field of fields) {
-            // console.log('fieldsConfig[field]',field, fieldsConfig[field]);
-            let { minLength, maxLength, pattern, dataType, required } = fieldsConfig[field];
-            console.log(minLength, maxLength, pattern, dataType);
-            minLength = minLength ? Number(minLength) : 0;
-            maxLength = maxLength ? Number(maxLength) : 1000;
-            console.log('minLength', minLength, maxLength);
-            let fieldSchema;
-            dataType = dataType || '';
-            switch (dataType) {
-                case 'number':
-                    fieldSchema = Joi.number()
-                        .min(minLength || -Infinity)
-                        .max(maxLength || Infinity);
-                    break;
-                case 'boolean':
-                    fieldSchema = Joi.boolean();
-                    break;
-                case 'date':
-                    fieldSchema = Joi.date();
-                    break;
-                case 'array':
-                    fieldSchema = Joi.array()
-                        .items(Joi.any()); // You may want to specify the types of items within the array
-                    break;
-                case 'object':
-                    fieldSchema = Joi.object();
-                    break;
-                case 'string': case '':
-                    fieldSchema = Joi.string()
-                        .min(minLength)
-                        .max(maxLength)
-                        .pattern(new RegExp(pattern || '.*'));
-                    break;
-                case 'object':
-                    fieldSchema = Joi.object();
-                    break;
-                default:
-                    throw new Error(`Unsupported data type for field ${field}: ${dataType}`);
-            }
-            if (required) {
-                fieldSchema = fieldSchema.required();
-            }
-
-            const { error, value } = fieldSchema.validate(requestBody[field], { abortEarly: false });
-            // console.log('joi error----->', error,'joi value----->',value);
-            if (error) {
-                ErrorArr.push({
-                    field: field,
-                    message:error.details[0].message
-                });
-                // console.log('joi error----->', error.details[0].message);
-                // return response(message_error,STATUS_CODES.BAD_REQUEST);
-            }
-
-            userData[field] = value;
+    const userData = {};
+    let ErrorArr = [];
+    for (const field of fields) {
+        // console.log('fieldsConfig[field]',field, fieldsConfig[field]);
+        let { minLength, maxLength, pattern, dataType, required } = fieldsConfig[field];
+        console.log(minLength, maxLength, pattern, dataType);
+        minLength = minLength ? Number(minLength) : 0;
+        maxLength = maxLength ? Number(maxLength) : 1000;
+        console.log('minLength', minLength, maxLength);
+        let fieldSchema;
+        dataType = dataType || '';
+        switch (dataType) {
+            case 'number':
+                fieldSchema = Joi.number()
+                    .min(minLength || -Infinity)
+                    .max(maxLength || Infinity);
+                break;
+            case 'boolean':
+                fieldSchema = Joi.boolean();
+                break;
+            case 'date':
+                fieldSchema = Joi.date();
+                break;
+            case 'array':
+                fieldSchema = Joi.array()
+                    .items(Joi.any()); // You may want to specify the types of items within the array
+                break;
+            case 'object':
+                fieldSchema = Joi.object();
+                break;
+            case 'string': case '':
+                fieldSchema = Joi.string()
+                    .min(minLength)
+                    .max(maxLength)
+                    .pattern(new RegExp(pattern || '.*'));
+                break;
+            case 'object':
+                fieldSchema = Joi.object();
+                break;
+            default:
+                throw new Error(`Unsupported data type for field ${field}: ${dataType}`);
         }
-        if (ErrorArr.length > 0) {
-            return {error : ErrorArr};
+        if (required) {
+            fieldSchema = fieldSchema.required();
         }
-        return userData;
+
+        const { error, value } = fieldSchema.validate(requestBody[field], { abortEarly: false });
+        // console.log('joi error----->', error,'joi value----->',value);
+        if (error) {
+            ErrorArr.push({
+                field: field,
+                message: error.details[0].message
+            });
+            // console.log('joi error----->', error.details[0].message);
+            // return response(message_error,STATUS_CODES.BAD_REQUEST);
+        }
+
+        userData[field] = value;
+    }
+    if (ErrorArr.length > 0) {
+        return { error: ErrorArr };
+    }
+    return userData;
     // } catch (err) {
     //     console.error(`Error: ${err.message}`);
     //     return {};
