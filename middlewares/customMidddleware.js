@@ -8,6 +8,7 @@ const mongoConfig = readJsonFiles('./applicationConfig/mongoConfig.json');
 const auth = mongoConfig.auth;
 const mongoDBManagerObj = new MongoDBManager(auth.databaseName);  // Instantiate the MongoDBManager
 
+
 const APIMiddleware = async (req, res, next) => {
     try {
         // Check if the request is to an API endpoint

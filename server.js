@@ -2,6 +2,8 @@ const cluster = require('cluster');
 const numCPUs = require('os').cpus().length;
 const express = require('express');
 const cors = require('cors');
+const cronScheduler = require('./commonServices/cronScheduler');
+//scheduler lock file should be removed before running the scheduler
 
 const corsOption = {
     "origin": "*"

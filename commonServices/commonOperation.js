@@ -2,6 +2,7 @@ const fs = require('fs');
 const jwt = require('jsonwebtoken');
 const { promisify } = require('util');
 const { response } = require('express');
+const { DateTime } = require('luxon');
 
 const Joi = require('joi');
 // Generate a secret key
@@ -103,19 +104,23 @@ const intersection = (arr1, arr2) => {
 
 
 // Send email
-
-async function sendEmail(subject, body, toEmail, smtpServer = otherConfig['emailConfig'].smtp_server, smtpPort = otherConfig['emailConfig'].smtp_port, senderEmail = otherConfig['emailConfig'].sender_email, senderPassword = otherConfig['emailConfig'].sender_password, retryId = null) {
+let emailAuth =( smtpServer = otherConfig['emailConfig'].smtp_server, smtpPort = otherConfig['emailConfig'].smtp_port, senderEmail = otherConfig['emailConfig'].sender_email, senderPassword = otherConfig['emailConfig'].sender_password)=>{
+    let transporter = nodemailer.createTransport({
+        host: smtpServer,
+        port: smtpPort,
+        secure: false, // true for 465, false for other ports
+        auth: {
+            user: senderEmail,
+            pass: senderPassword
+        }
+    });
+    return transporter;
+}
+let transporterObj = emailAuth();
+async function sendEmail(subject, body, toEmail,retryId = 0,transporter=transporterObj, senderEmail = otherConfig['emailConfig'].sender_email) {
     try {
         // Create a SMTP transporter object
-        let transporter = nodemailer.createTransport({
-            host: smtpServer,
-            port: smtpPort,
-            secure: false, // true for 465, false for other ports
-            auth: {
-                user: senderEmail,
-                pass: senderPassword
-            }
-        });
+        
 
         // Send mail with defined transport object
         let info = await transporter.sendMail({
@@ -124,26 +129,27 @@ async function sendEmail(subject, body, toEmail, smtpServer = otherConfig['email
             subject: subject,
             html: body
         });
-        if (retryId != null) {
-            mongoDBManagerObj.delete_document(otherConfig["emailConfig"]['retryMailCol'], { "to_email": to_email, subject: subject, body: body })
+        if (retryId != 0) {
+            mongoDBManagerObj.deleteDocument(otherConfig["emailConfig"]['retryMailCol'], { "toEmail": toEmail, subject: subject, body: body })
         }
 
         console.log('Message sent: %s', info.messageId);
         return true;
     } catch (error) {
-        console.error('Error in sending email:', error);
-        if (retryId != null) {
-            existing_data = mongoDBManagerObj.find_documents(otherConfig["emailConfig"]['retryMailCol'], { '_id': retryId })
-            if (existing_data.length > 0) {
-                print('Data already present. Skipping insertion.')
-            }
-            else {
-                retryObj = { "subject": subject, "body": body, "to_email": to_email, "timestamp": DateTime.now() }
-                mongoDBManagerObj.insert_document(otherConfig["emailConfig"]['retryMailCol'], retryObj)
-                print('Data to be inserted in retry mail-->', retryObj)
-            }
+        console.error('\nretryId :',retryId,'\n\nError in sending email:',error);
+        if (retryId == 0) {
+            // existing_data = mongoDBManagerObj.findDocuments(otherConfig["emailConfig"]['retryMailCol'], { '_id': retryId })
+            // if (existing_data.length > 0) {
+            //     console.log('Data already present. Skipping insertion.')
+            // }
+            // else {
+                retryObj = { "subject": subject, "body": body, "toEmail": toEmail, "timestamp": DateTime.now() }
+                mongoDBManagerObj.insertDocument(otherConfig["emailConfig"]['retryMailCol'], retryObj)
+            // }
+        }else{
+            console.log('-----will retry to send mail in next attempt ----')
         }
-        return False
+        return false
     }
 }
 
