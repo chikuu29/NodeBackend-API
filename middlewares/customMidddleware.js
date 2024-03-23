@@ -32,8 +32,9 @@ const APIMiddleware = async (req, res, next) => {
             logError({ ...message_error });
             return res.status(400).json(message_error);
         }
-        console.log('request.path', req.path);
-        if (req.path.includes('/Auth/')) {
+        let requestPath =req.path.toLowerCase(req.path)
+        console.log('request.path', req.path,requestPath.includes('/roleaccess/'));
+        if (requestPath.includes('/auth/')) {
             if (!apiRequirementsConfig[projectName]) {
                 message_error = { error: 'projectName does not exist', 'success': false, message: 'input error' };
                 logError({ ...message_error });
@@ -41,8 +42,9 @@ const APIMiddleware = async (req, res, next) => {
             }
             const accessToken = req.headers.authorization.split('Bearer ').pop();
             const tokenInfo = validateAccessToken(accessToken, otherConfig[projectName].tokenConfig.secretKey);
+            console.log('tokenInfo--', tokenInfo);
             if (tokenInfo) {
-                if (req.path.includes('/Auth/roleAccess/')) {
+                if (requestPath.includes('/auth/roleaccess/')) {
                     if (!await isAllowed(req, tokenInfo)) {
                         message_error = { error: 'Access Forbidden', 'success': false, message: 'permission error' };
                         logError({ ...message_error });
@@ -72,7 +74,7 @@ const isAllowed = async(req, tokenInfo) => {
         const projectName = req.body.projectName;
         console.log(`API view being called: ${req.path}`);
         const tempArr = req.path.split('/');
-        const viewClass = tempArr[tempArr.length-2];
+        const viewClass = tempArr[tempArr.length-1];
         console.log(`API view being called: ${viewClass}`);
         const queryConditions = {
             '$or': [

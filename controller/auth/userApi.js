@@ -75,7 +75,7 @@ exports.registerUser = async (req, res) => {
             userData.password = hashed_password;
 
             const otp = Math.floor(100000 + Math.random() * 900000).toString();
-            const emailVefData = {
+            var emailVefData = {
                 otp,
                 otpTimeStamp: DateTime.now(),
                 numOfEmailVefFailAttempt: 0,
@@ -86,10 +86,10 @@ exports.registerUser = async (req, res) => {
             userData['numOfLoginFailAttempt'] = 0
             userData['blockTillLogInTimeStamp'] = DateTime.now()
             // You need to implement the send_otp_email function
-            send_otp_email(userData.email, otp);
-
+            send_otp_email(userData.email, otp);          
+            var { emailVefData, ...userDataSendRes } = userData;
             await mongoDBManagerObj.insertDocument(mongoConfig[projectName].userCol, userData);
-            const message_info = { message: `User: ${userData.userName} registered successfully`, projectName, 'success': true, data: userData };
+            const message_info = { message: `User: ${userData.userName} registered successfully`, projectName, 'success': true, data: userDataSendRes };
             logInfo({ ...message_info });
             return res.status(200).json(message_info);
         } else {
@@ -386,7 +386,7 @@ exports.emailVerifyUser = async (req, res) => {
 
         const tokenInfo = req.tokenInfo;
         const userName = tokenInfo.userName;
-
+        console.log("Verifying user: ", userName, userData);
         if (userName !== userData.userName) {
             message_error = { message: 'userName mismatch', error: 'userName mismatch', 'success': false };
             logError({ ...message_error });
@@ -472,7 +472,7 @@ exports.updateUserEmail = async (request, res) => {
         const userFields = Object.keys(userFieldsConfig);
         console.log('-----3', userFields);
 
-        const userData = requestDataInjectionCheck(userFields, userFieldsConfig, req.body);
+        const userData = requestDataInjectionCheck(userFields, userFieldsConfig, request.body);
         if (userData.error) {
             const message_error = { message: 'input error', error: JSON.stringify(userData.error), 'success': false };
             logError({ ...message_error });
