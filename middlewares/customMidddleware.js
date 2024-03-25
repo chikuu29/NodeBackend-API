@@ -6,7 +6,7 @@ const apiRequirementsConfig = readJsonFiles('./applicationConfig/apiRequirements
 
 const mongoConfig = readJsonFiles('./applicationConfig/mongoConfig.json');
 const auth = mongoConfig.auth;
-const mongoDBManagerObj = new MongoDBManager(auth.databaseName);  // Instantiate the MongoDBManager
+const mongoDBManagerObj = new MongoDBManager();  // Instantiate the MongoDBManager
 
 
 const APIMiddleware = async (req, res, next) => {

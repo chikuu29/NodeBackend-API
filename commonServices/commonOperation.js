@@ -126,8 +126,6 @@ let transporterObj = emailAuth();
 async function sendEmail(subject, body, toEmail, retryId = 0, transporter = transporterObj, senderEmail = otherConfig['emailConfig'].sender_email) {
     try {
         // Create a SMTP transporter object
-
-
         // Send mail with defined transport object
         let info = await transporter.sendMail({
             from: senderEmail,

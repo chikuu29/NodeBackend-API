@@ -1,17 +1,27 @@
 const { MongoClient } = require('mongodb');
-const  commonOperation  = require('./commonOperation');
+const commonOperation = require('./commonOperation');
+const { log } = require('util');
 
 const mongoConfig = commonOperation.readJsonFiles('applicationConfig/mongoConfig.json');
-const auth = mongoConfig.auth;
+const MONGO_CONNECTION_CONFIG = mongoConfig;
 // console.log('mongoConfig :', mongoConfig);
 
-async function connectMongo(user, password, databaseName, authMechanism, port, host) {
+async function connectMongo(MONGO_CONNECTION_CONFIG) {
     try {
-        const uri = `mongodb://${user}:${password}@${host}:${port}/?authSource=${databaseName}&authMechanism=${authMechanism}`;
-        const client = new MongoClient(uri);
+      
+        var url
+        if (MONGO_CONNECTION_CONFIG.DB_CONNECTION_TYPE == "ATLAS") {
+            CONNECTION_DETAILS = MONGO_CONNECTION_CONFIG.MONGO_ATLAS_CONNECTION
+            url = `mongodb+srv://${CONNECTION_DETAILS.user}:${CONNECTION_DETAILS.password}@${CONNECTION_DETAILS.host}/${CONNECTION_DETAILS.databaseName}?retryWrites=true&w=majority&appName=Cluster0`;
+            url = `mongodb+srv://cchiku1999:4WqX3s8paabc2y4o@cluster0.sklu9w7.mongodb.net/myMongoDB?retryWrites=true&w=majority&appName=Cluster0`
+        } else {
+            CONNECTION_DETAILS = MONGO_CONNECTION_CONFIG.auth
+            url = `mongodb://${CONNECTION_DETAILS.user}:${CONNECTION_DETAILS.password}@${CONNECTION_DETAILS.host}:${CONNECTION_DETAILS.port}/?authSource=${CONNECTION_DETAILS.databaseName}&authMechanism=${CONNECTION_DETAILS.authMechanism}`;
+        }
+        const client = new MongoClient(url);
         await client.connect();
-        console.log("---->connected to mongo<-----");
-        return client.db(databaseName);
+        console.log("=====>CONNECTED TO MONGO_DB<=====");
+        return client.db();
     } catch (err) {
         console.error("error in mongo connection:", err);
         return null;
@@ -19,12 +29,12 @@ async function connectMongo(user, password, databaseName, authMechanism, port, h
 }
 let db;
 async function connect() {
- db = await connectMongo(auth.user, auth.password, auth.databaseName, auth.authMechanism, auth.port, auth.host);
+    db = await connectMongo(MONGO_CONNECTION_CONFIG);
 }
 connect();
 class MongoDBManager {
-    constructor(database_name) {
-        this.database_name = database_name;
+    constructor() {
+        
     }
 
     getCollection(collection_name) {

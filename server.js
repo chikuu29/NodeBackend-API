@@ -28,8 +28,10 @@ if (cluster.isMaster) {
     const app = express();
     app.use(cors(corsOption));
     app.use(express.json());
-    app.use('/user', AuthRoutes);
-
+    app.get('/', (req, res) => {
+        res.send('<h1>Node Backend Server Is Running</h1>');
+    });
+    app.use('/auth', AuthRoutes);
     app.listen(port, () => {
         console.log(`Worker ${process.pid} started server at port ${port}`);
     });

@@ -16,7 +16,7 @@
                 "pattern":"^[a-zA-Z0-9._%+-]+@gmail\\.com$",
                 "required":true
             },
-            "mobile": {                
+            "phone": {                
                 "minLength":"5",
                 "pattern":"",
                 "required":true

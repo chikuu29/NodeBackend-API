@@ -69,11 +69,10 @@ exports.registerUser = async (req, res) => {
             return res.status(500).json(message_error);
         }
         // console.log('userData :', userData);
-        const existingUser = await mongoDBManagerObj.findDocuments(mongoConfig[projectName].userCol, { userName: userData.userName }, {});
+        const existingUser = await mongoDBManagerObj.findDocuments(mongoConfig[projectName].userCol, { email: userData.email, phone: userData.phone }, {});
         if (existingUser.length === 0) {
             const hashed_password = await bcrypt.hash(userData.password, 10);
             userData.password = hashed_password;
-
             const otp = Math.floor(100000 + Math.random() * 900000).toString();
             var emailVefData = {
                 otp,
