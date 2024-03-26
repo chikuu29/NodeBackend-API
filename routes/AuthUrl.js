@@ -6,7 +6,7 @@ const customMiddleware = require('../middlewares/customMidddleware');
 const userController = require('../controller/auth/userApi');
 router.post('/register', customMiddleware, userController.registerUser);
 router.get('/forGotPasswordOnUserId', customMiddleware, userController.forgotPasswordOnUserId);
-router.post('/loginUser', customMiddleware, userController.loginUser);
+router.post('/login', customMiddleware, userController.loginUser);
 router.get('/getNewAcessToken', customMiddleware, userController.getNewAcessToken);
 router.post('/passWordResetVerification', customMiddleware, userController.passWordResetVerification);
 router.post('/Auth/emailVerifyUser', customMiddleware, userController.emailVerifyUser);
