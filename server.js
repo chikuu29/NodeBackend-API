@@ -4,18 +4,15 @@ const express = require('express');
 const cors = require('cors');
 const cronScheduler = require('./commonServices/cronScheduler');
 //scheduler lock file should be removed before running the scheduler
-
 const corsOption = {
     "origin": "*"
 };
-
 const AuthRoutes = require('./routes/AuthUrl');
 const productRoutes= require('./routes/productRoutes')
 const port = process.env.PORT || 7000;
 
 if (cluster.isMaster) {
     console.log(`Master ${process.pid} is running`);
-
     // Fork workers.
     for (let i = 0; i < numCPUs; i++) {
         cluster.fork();
