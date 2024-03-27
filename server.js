@@ -10,7 +10,7 @@ const corsOption = {
 };
 
 const AuthRoutes = require('./routes/AuthUrl');
-// const productRoutes= require('./routes/')
+const productRoutes= require('./routes/productRoutes')
 const port = process.env.PORT || 7000;
 
 if (cluster.isMaster) {
@@ -32,7 +32,7 @@ if (cluster.isMaster) {
         res.send('<h1>Node Backend Server Is Running</h1>');
     });
     app.use('/auth', AuthRoutes);
-    // app.use("/v1/product",productRoutes)
+    app.use("/v1/product",productRoutes)
     app.listen(port, () => {
         console.log(`Worker ${process.pid} started server at port ${port}`);
     });
