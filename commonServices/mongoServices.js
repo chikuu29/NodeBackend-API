@@ -1,4 +1,4 @@
-const { MongoClient } = require('mongodb');
+const { MongoClient} = require('mongodb');
 const commonOperation = require('./commonOperation');
 const { log } = require('util');
 
@@ -83,15 +83,18 @@ class MongoDBManager {
 
     async findDocuments(collectionName, query = {}, projection = null) {
         try {
-            const collection = this.getCollection(collectionName);
-            const cursor = collection.find(query, projection);
-            const listCursor = await cursor.toArray();
-            if (listCursor.length > 0) {
-                return listCursor;
-            } else {
-                console.log("No documents found");
-                return [];
-            }
+            // const collection = this.getCollection(collectionName);
+            // const cursor = collection.find(query, projection);
+            // const listCursor = await cursor.toArray();
+            // if (listCursor.length > 0) {
+            //     return listCursor;
+            // } else {
+            //     console.log("No documents found");
+            //     return [];
+            // }
+            const data=db.collection(collectionName).find(query,projection).toArray()
+            return data
+
         } catch (err) {
             console.error("Error in finding documents:", err);
             return [];

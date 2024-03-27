@@ -38,7 +38,7 @@
             }
         },
         "loginFields":{
-            "userName":{
+            "loginId":{
                 "minLength":"5",
                 "pattern":"",
                 "required":true
