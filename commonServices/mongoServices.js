@@ -2,7 +2,7 @@ const { MongoClient } = require('mongodb');
 const commonOperation = require('./commonOperation');
 const { log } = require('util');
 
-const mongoConfig = commonOperation.readJsonFiles('applicationConfig/mongoConfig.json');
+const mongoConfig = commonOperation.readJsonFiles('config/mongoConfig.json');
 const MONGO_CONNECTION_CONFIG = mongoConfig;
 // console.log('mongoConfig :', mongoConfig);
 
@@ -13,7 +13,7 @@ async function connectMongo(MONGO_CONNECTION_CONFIG) {
         if (MONGO_CONNECTION_CONFIG.DB_CONNECTION_TYPE == "ATLAS") {
             CONNECTION_DETAILS = MONGO_CONNECTION_CONFIG.MONGO_ATLAS_CONNECTION
             url = `mongodb+srv://${CONNECTION_DETAILS.user}:${CONNECTION_DETAILS.password}@${CONNECTION_DETAILS.host}/${CONNECTION_DETAILS.databaseName}?retryWrites=true&w=majority&appName=Cluster0`;
-            url = `mongodb+srv://cchiku1999:4WqX3s8paabc2y4o@cluster0.sklu9w7.mongodb.net/myMongoDB?retryWrites=true&w=majority&appName=Cluster0`
+            // url = `mongodb+srv://cchiku1999:4WqX3s8paabc2y4o@cluster0.sklu9w7.mongodb.net/myMongoDB?retryWrites=true&w=majority&appName=Cluster0`
         } else {
             CONNECTION_DETAILS = MONGO_CONNECTION_CONFIG.auth
             url = `mongodb://${CONNECTION_DETAILS.user}:${CONNECTION_DETAILS.password}@${CONNECTION_DETAILS.host}:${CONNECTION_DETAILS.port}/?authSource=${CONNECTION_DETAILS.databaseName}&authMechanism=${CONNECTION_DETAILS.authMechanism}`;

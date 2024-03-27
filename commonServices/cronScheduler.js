@@ -4,7 +4,7 @@ const { DateTime } = require('luxon');
 const { sendEmail } = require('./commonOperation');
 const MongoDBManager = require('./mongoServices');
 let {readJsonFiles} = require('./commonOperation');
-const otherConfig = readJsonFiles('./applicationConfig/otherFeaturesConfigs.json');
+const otherConfig = readJsonFiles('./config/otherFeaturesConfigs.json');
 mongoDBManagerObj = new MongoDBManager(); 
 
 const lockFilePath = './scheduler.lock';

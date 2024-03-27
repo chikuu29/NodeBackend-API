@@ -7,9 +7,9 @@ console.log('MongoDBManager :', MongoDBManager);
 const { readJsonFiles, requestDataInjectionCheck, logError, logInfo, sendEmail, generateTokens, getNewAccessToken } = require('../../commonServices/commonOperation');
 // const { send_email } = require('./emailService'); // Assuming you have an email service file
 
-const mongoConfig = readJsonFiles('./applicationConfig/mongoConfig.json');
-const apiRequirementsConfig = readJsonFiles('./applicationConfig/apiRequirements.json');
-const otherConfig = readJsonFiles('./applicationConfig/otherFeaturesConfigs.json');
+const mongoConfig = readJsonFiles('./config/mongoConfig.json');
+const apiRequirementsConfig = readJsonFiles('./config/apiRequirements.json');
+const otherConfig = readJsonFiles('./config/otherFeaturesConfigs.json');
 
 const mongoDBManagerObj = new MongoDBManager();
 
