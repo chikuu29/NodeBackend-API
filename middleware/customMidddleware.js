@@ -7,8 +7,6 @@ const apiRequirementsConfig = readJsonFiles('./applicationConfig/apiRequirements
 const mongoConfig = readJsonFiles('./applicationConfig/mongoConfig.json');
 const auth = mongoConfig.auth;
 const mongoDBManagerObj = new MongoDBManager();  // Instantiate the MongoDBManager
-
-
 const APIMiddleware = async (req, res, next) => {
     try {
         // Check if the request is to an API endpoint
@@ -68,7 +66,6 @@ const APIMiddleware = async (req, res, next) => {
         return res.status(500).json(message_error);
     }
 };
-
 const isAllowed = async(req, tokenInfo) => {
     try {
         const projectName = req.body.projectName;
