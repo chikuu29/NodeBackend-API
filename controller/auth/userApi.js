@@ -514,8 +514,12 @@ exports.updateUserEmail = async (request, res) => {
         const updateDataTemp = {
             email: userData.newEmail,
             'emailVefData.verified': false,
-            'emailVefData.otp': otp
+            'emailVefData.otp': otp,
+            'emailVefData.otpTimeStamp': DateTime.now(),
+            'emailVefData.numOfEmailVefFailAttempt': 0,
+            'emailVefData.blockedTillEmailVefTimeStamp': DateTime.now(),
         };
+        send_otp_email(updateDataTemp.email, otp); 
 
         await mongoDBManagerObj.updateDocument(mongoConfig[projectName]['userCol'], { userName: userData.userName }, { '$set': updateDataTemp });
         message_info = { message: 'Email added  successfully to verify call verifyUser api', 'success': true };
