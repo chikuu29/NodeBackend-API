@@ -346,6 +346,8 @@ exports.loginUser = async (req, res) => {
                         path: '/refresh-token/' // Set a specific path for the refresh token cookie
                     }
                 );
+                const updateDataTemp = { blockTillLogInTimeStamp: DateTime.now(), numOfLoginFailAttempt: 0 };
+                await mongoDBManagerObj.updateDocument(mongoConfig[projectName]['userCol'], { 'userName': userData['userName'] }, { '$set': updateDataTemp });
                 return res.status(200).json(message_info);
             } else {
                 // Handle incorrect password case
