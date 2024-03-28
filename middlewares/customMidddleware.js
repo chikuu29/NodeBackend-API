@@ -51,6 +51,13 @@ const APIMiddleware = async (req, res, next) => {
                         return res.status(403).json(message_error);
                     }
                 }
+                if (requestPath.includes('/vfuser/')) {
+                    if (!await isVerified(req, tokenInfo)) {
+                        message_error = { error: 'Access Forbidden', 'success': false, message: 'User not verified' };
+                        logError({ ...message_error });
+                        return res.status(403).json(message_error);
+                    }
+                }
                 req.tokenInfo = tokenInfo;
                 return next();
             } else {
@@ -93,6 +100,23 @@ const isAllowed = async(req, tokenInfo) => {
             }
         }
         return Object.keys(apisAllowedRoles).some(role => userIdWithRoles[role]);
+    } catch (err) {
+        console.error('Exception in middleware', err);
+        message_error = { error: err.message, 'success': false, message: 'middleware error' };
+        logError({ ...message_error });
+        return false;
+    }
+};
+const isVerified = async(req, tokenInfo) => {
+    try {
+        const projectName = req.body.projectName;
+        console.log(`API view being called: ${req.path}`);
+        const queryConditions = {
+           'userName': tokenInfo.userName,
+        };
+        const userEmailVefData = await mongoDBManagerObj.findDocuments(mongoConfig[projectName].userCol, queryConditions, {emailVefData:1,'_id':0});
+        console.log('userEmailVefData--', userEmailVefData);
+        return userEmailVefData[0].emailVefData.verified == true;
     } catch (err) {
         console.error('Exception in middleware', err);
         message_error = { error: err.message, 'success': false, message: 'middleware error' };

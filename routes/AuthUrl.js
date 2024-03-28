@@ -10,8 +10,8 @@ router.post('/loginUser', customMiddleware, userController.loginUser);
 router.get('/getNewAcessToken', customMiddleware, userController.getNewAcessToken);
 router.post('/passWordResetVerification', customMiddleware, userController.passWordResetVerification);
 router.post('/Auth/emailVerifyUser', customMiddleware, userController.emailVerifyUser);
-router.post('/Auth/updateUserEmail', customMiddleware, userController.updateUserEmail);
-router.post('/Auth/updateUserBasicData', customMiddleware, userController.updateUserBasicData);
+router.post('/Auth/vfUser/updateUserEmail', customMiddleware, userController.updateUserEmail);
+router.post('/Auth/vfUser/updateUserBasicData', customMiddleware, userController.updateUserBasicData);
 router.post('/Auth/roleAccess/AssignRoleToUser', customMiddleware, userController.AssignRoleToUser);
 // router.post('/login',userController.login);
 // router.post('/updateUser/:id',auth,userController.updateUser)

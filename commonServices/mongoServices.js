@@ -73,8 +73,9 @@ class MongoDBManager {
 
     async findDocuments(collectionName, query = {}, projection = null) {
         // try {
+            console.log('projection--', projection,'query--', query);
             const collection = this.getCollection(collectionName);
-            const cursor = collection.find(query, projection);
+            const cursor =  collection.find(query).project(projection)
             const listCursor = await cursor.toArray();
             if (listCursor.length > 0) {
                 return listCursor;
