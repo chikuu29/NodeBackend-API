@@ -93,6 +93,7 @@ class MongoDBManager {
             //     return [];
             // }
             const data=db.collection(collectionName).find(query,projection).toArray()
+            //  const listCursor = await cursor.toArray();
             return data
 
         } catch (err) {

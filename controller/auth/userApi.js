@@ -332,6 +332,9 @@ exports.loginUser = async (req, res) => {
                 console.log("Password is correct");
                 const payload = {
                     userName: storedData[0].userName,
+                    firstName: storedData[0].firstName,
+                    lastName: storedData[0].lastName,
+                    image:null,
                     email: storedData[0].email,
                     phone: storedData[0].phone,
                     role: "user"
@@ -339,6 +342,7 @@ exports.loginUser = async (req, res) => {
                 const tokens = generateTokens(payload, otherConfig[projectName]['tokenConfig']['secretKey'], otherConfig[projectName]['tokenConfig']['acess_expiration_delta'], otherConfig[projectName]['tokenConfig']['refresh_expiration_delta']);
                 const message_info = {
                     "message": 'Login successful',
+                    "authProvider":"login-web",
                     'success': true,
                     "login_info": {
                         userFullName: storedData[0].userName,
@@ -347,10 +351,7 @@ exports.loginUser = async (req, res) => {
                         firstName: storedData[0].firstName,
                         lastName: storedData[0].lastName
                     },
-                    "access_code": {
-                        "access_token": tokens.access_token,
-                        "refresh_token": tokens.refresh_token
-                    }
+                    "accessToken": tokens.access_token
                 };
                 logInfo({ ...message_info });
                 // Set access token in the response headers
