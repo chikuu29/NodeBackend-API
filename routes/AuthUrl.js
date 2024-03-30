@@ -9,6 +9,13 @@ const checkSessionMiddleware = require('../middleware/authenticate');
 router.post('/register', customMiddleware, userController.registerUser);
 router.get('/forGotPasswordOnUserId', customMiddleware, userController.forgotPasswordOnUserId);
 router.post('/login', customMiddleware, userController.loginUser);
+router.post('/logout', (req, res) => {
+    // Assuming the cookie name is 'session'
+    res.clearCookie('refresh_token', { httpOnly: true });
+  
+    // Send a response indicating successful logout
+    res.status(200).send('Logged out successfully');
+  });
 router.post("/session",customMiddleware, checkSessionMiddleware,authenticationController.grantPermission)
 router.get('/getNewAcessToken', customMiddleware, userController.getNewAcessToken);
 router.post('/passWordResetVerification', customMiddleware, userController.passWordResetVerification);
