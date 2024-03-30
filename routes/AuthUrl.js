@@ -10,14 +10,15 @@ router.post('/register', customMiddleware, userController.registerUser);
 router.get('/forGotPasswordOnUserId', customMiddleware, userController.forgotPasswordOnUserId);
 router.post('/login', customMiddleware, userController.loginUser);
 router.post('/logout', (req, res) => {
-    // Assuming the cookie name is 'session'
-    res.clearCookie('refresh_token', { httpOnly: true });
-  
-    // Send a response indicating successful logout
-    res.status(200).send('Logged out successfully');
-  });
-router.post("/session",customMiddleware, checkSessionMiddleware,authenticationController.grantPermission)
-router.get('/getNewAcessToken', customMiddleware, userController.getNewAcessToken);
+  // Assuming the cookie name is 'session'
+  res.clearCookie('refresh_token', { httpOnly: true });
+
+  // Send a response indicating successful logout
+  res.status(200).send('Logged out successfully');
+});
+router.post("/session", checkSessionMiddleware, authenticationController.grantPermission)
+router.post('/refresh', checkSessionMiddleware, authenticationController.newAccessToken);
+
 router.post('/passWordResetVerification', customMiddleware, userController.passWordResetVerification);
 router.post('/Auth/emailVerifyUser', customMiddleware, userController.emailVerifyUser);
 router.post('/Auth/updateUserEmail', customMiddleware, userController.updateUserEmail);

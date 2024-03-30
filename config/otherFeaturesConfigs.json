@@ -9,7 +9,7 @@
     },
     "tokenConfig": {
         "secretKey": "your_refresh_token_here",
-        "acess_expiration_delta": 3600,
+        "acess_expiration_delta": 60,
         "refresh_expiration_delta": 86400
     },
     "projectOne":{
