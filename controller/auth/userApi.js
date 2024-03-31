@@ -361,7 +361,8 @@ exports.loginUser = async (req, res) => {
                     tokens.refresh_token.toString(),
                     {
                         httpOnly: true,
-                        secure: true,
+                        sameSite: 'None',
+                        secure: false,
                         maxAge: 2 * 24 * 60 * 60 * 1000, // Set cookie expiration time (2 days)
                         path: '/' // Set a specific path for the refresh token cookie
                     }
