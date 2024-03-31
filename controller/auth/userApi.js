@@ -46,13 +46,14 @@ function send_otp_email(to_email, otp) {
 exports.registerUser = async (req, res) => {
     try {
         // console.log('req.body :', req.body);
-        if (!req.body || !req.body.projectName) {
+        const projectName = req.cookies['projectName']
+        if (!req.body || !projectName) {
             const message_error = { error: 'Please provide Project Name', 'success': false, message: 'input error' };
             logError({ ...message_error });
             return res.status(400).json(message_error);
         }
 
-        const { projectName } = req.body;
+        // const { projectName } = req.body;
         if (!apiRequirementsConfig[projectName]) {
             const message_error = { error: 'projectName does not exist', 'success': false, message: 'input error' };
             logError({ ...message_error });
@@ -286,11 +287,12 @@ exports.passWordResetVerification = async (request, res) => {
 exports.loginUser = async (req, res) => {
     try {
         const requestData = req.body;
+        const projectName = req.cookies['projectName']
 
-        if (!requestData || !requestData || !requestData.projectName) {
+        if (!requestData || !requestData || !projectName) {
             return res.status(400).json({ error: 'Please provide Project Name', 'success': false, message: 'Input error' });
         }
-        const projectName = requestData.projectName;
+        // const projectName = projectName;
         if (!apiRequirementsConfig[projectName]) {
             return res.status(400).json({ error: 'projectName does not exist', 'success': false, message: 'Input error' });
         }
@@ -395,7 +397,7 @@ exports.emailVerifyUser = async (req, res) => {
     try {
         const requestData = req.body;
 
-        const projectName = requestData.projectName || '';
+        const projectName = projectName || '';
         const userFieldsConfig = apiRequirementsConfig[projectName].verifyUser;
         const userFields = Object.keys(userFieldsConfig);
 
