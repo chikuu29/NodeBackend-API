@@ -16,7 +16,7 @@ const checkSessionMiddleware = async (req, res, next) => {
                 {
                     httpOnly: true,
                     sameSite: 'None',
-                    // secure: true,
+                    secure: true,
                     maxAge: 2 * 24 * 60 * 60 * 1000, // Set cookie expiration time (2 days)
                     path: '/' // Set a specific path for the refresh token cookie
                 }
@@ -27,7 +27,7 @@ const checkSessionMiddleware = async (req, res, next) => {
                 {
                     httpOnly: true,
                     sameSite: 'None',
-                    // secure: true,
+                    secure: true,
                     maxAge: 2 * 24 * 60 * 60 * 1000, // Set cookie expiration time (2 days)
                     path: '/' // Set a specific path for the refresh token cookie
                 }

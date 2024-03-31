@@ -362,7 +362,7 @@ exports.loginUser = async (req, res) => {
                     {
                         httpOnly: true,
                         sameSite: 'None',
-                        secure: false,
+                        secure: true,
                         maxAge: 2 * 24 * 60 * 60 * 1000, // Set cookie expiration time (2 days)
                         path: '/' // Set a specific path for the refresh token cookie
                     }
