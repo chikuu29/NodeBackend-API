@@ -8,23 +8,24 @@ const otherConfig = readJsonFiles('./config/otherFeaturesConfigs.json');
 exports.grantPermission = async (req, res) => {
     try {
         var refresh_token = req.cookies['refresh_token']
-        const projectName = req.body.projectName;
+        const projectName = req.projectName;
         const newAccessToken = getNewAccessToken(refresh_token, otherConfig[projectName]['tokenConfig']['secretKey'], otherConfig[projectName]['tokenConfig']['acess_expiration_delta']);
         if (newAccessToken) {
+          
             var validateTokenInfo = req.validateTokenInfo;
             const Login_info = {
                 "message": 'ReLogin successful',
                 'success': true,
-                "authProvider":"Relogin-web",
+                "authProvider": "Relogin-web",
                 "login_info": {
                     userFullName: validateTokenInfo.userName,
                     email: validateTokenInfo.email,
                     phone: validateTokenInfo.phone,
-                    image:validateTokenInfo.image,
+                    image: validateTokenInfo.image,
                     firstName: validateTokenInfo.firstName,
                     lastName: validateTokenInfo.lastName
                 },
-                "accessToken":newAccessToken  
+                "accessToken": newAccessToken
             };
             return res.status(200).json(Login_info);
         } else {
@@ -37,7 +38,7 @@ exports.grantPermission = async (req, res) => {
 }
 
 
-exports.newAccessToken=async (req,res)=>{
+exports.newAccessToken = async (req, res) => {
     try {
         var refresh_token = req.cookies['refresh_token']
         const projectName = req.body.projectName;
@@ -58,7 +59,7 @@ exports.newAccessToken=async (req,res)=>{
             //     },
             //     "accessToken":newAccessToken  
             // };
-            return res.status(200).json({accessToken:newAccessToken});
+            return res.status(200).json({ accessToken: newAccessToken });
         } else {
             message_error = { message: 'Please provide valid refresh token', error: 'Please provide valid refresh token', 'success': false };
             return res.status(400).json(message_error);

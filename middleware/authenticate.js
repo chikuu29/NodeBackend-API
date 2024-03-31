@@ -7,23 +7,46 @@ const checkSessionMiddleware = async (req, res, next) => {
     try {
 
         var refresh_token = req.cookies['refresh_token']
-        if (!refresh_token) {
-            return res.status(401).json({ success: false, message: "Token Not Found" });
-        }
-        const projectName = req.body.projectName;
-        const validateTokenInfo = validateAccessToken(refresh_token, otherConfig[projectName].tokenConfig.secretKey);
-        if (validateTokenInfo) {
-
-            req.validateTokenInfo = validateTokenInfo;
-            return next();
+        const projectName = req.cookies['projectName']
+        if (!refresh_token && !projectName) {
+            const requestedDomain = req.hostname;
+            res.cookie(
+                'callback-url',
+                requestedDomain.toString(),
+                {
+                    httpOnly: true,
+                    // secure: true,
+                    maxAge: 2 * 24 * 60 * 60 * 1000, // Set cookie expiration time (2 days)
+                    path: '/' // Set a specific path for the refresh token cookie
+                }
+            );
+            res.cookie(
+                'projectName',
+                "projectOne",
+                {
+                    httpOnly: true,
+                    // secure: true,
+                    maxAge: 2 * 24 * 60 * 60 * 1000, // Set cookie expiration time (2 days)
+                    path: '/' // Set a specific path for the refresh token cookie
+                }
+            );
+            return res.status(401).json({ success: false, message: "Login State Lost" });
         } else {
-            return res.status(401).json({ success: false, message: "Token Not Provided" });
+
+            console.log("project Name", projectName);
+            const validateTokenInfo = validateAccessToken(refresh_token, otherConfig[projectName].tokenConfig.secretKey);
+            if (validateTokenInfo) {
+                req.validateTokenInfo = validateTokenInfo;
+                req.projectName = projectName;
+                return next();
+            } else {
+                return res.status(401).json({ success: false, message: "Token Not Provided" });
+            }
         }
 
     } catch (error) {
-        // console.error('Exception in middleware', error);
-        // message_error = { error: error.message, 'success': false, message: 'middleware error' };
-        // logError({ ...message_error });
+
+        res.clearCookie('refresh_token', { httpOnly: true });
         return res.status(401).json({ success: false, message: "Unautorization" });
     }
 }
@@ -34,6 +57,7 @@ const checkAccessTokenMiddleWare = async (req, res, next) => {
         if (!accessToken) {
             res.status(403).json({ success: false, message: "Forbidden" })
         }
+        const projectName = req.cookies['projectName'] ? req.cookies['projectName'] : req.body.projectName;
         const tokenInfo = validateAccessToken(accessToken, otherConfig[projectName].tokenConfig.secretKey);
         if (tokenInfo) {
             req.tokenInfo = tokenInfo;

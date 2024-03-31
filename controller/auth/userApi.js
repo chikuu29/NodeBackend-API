@@ -290,13 +290,10 @@ exports.loginUser = async (req, res) => {
         if (!requestData || !requestData || !requestData.projectName) {
             return res.status(400).json({ error: 'Please provide Project Name', 'success': false, message: 'Input error' });
         }
-
         const projectName = requestData.projectName;
-
         if (!apiRequirementsConfig[projectName]) {
             return res.status(400).json({ error: 'projectName does not exist', 'success': false, message: 'Input error' });
         }
-
         const userFieldsConfig = apiRequirementsConfig[projectName]['loginFields'];
         const userFields = Object.keys(userFieldsConfig);
 
