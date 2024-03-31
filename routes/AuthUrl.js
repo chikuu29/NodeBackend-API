@@ -11,7 +11,12 @@ router.get('/forGotPasswordOnUserId', customMiddleware, userController.forgotPas
 router.post('/login', userController.loginUser);
 router.post('/logout', authenticationMiddleware.checkSessionMiddleware, (req, res) => {
   // Assuming the cookie name is 'session'
-  res.clearCookie('refresh_token', { httpOnly: true });
+  res.clearCookie('refresh_token', {
+    httpOnly: true,
+    sameSite: 'None',
+    secure: true
+  });
+
   // Send a response indicating successful logout
   res.status(200).send('Logged out successfully');
 });
