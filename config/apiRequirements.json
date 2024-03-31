@@ -2,37 +2,37 @@
     "projectOne": {
         "registerFields": {
             "userName":{
-                "minLength":"5",
+                "minLength":"1",
                 "pattern":"",
                 "required":true
             },
             "password": {
-                "minLength":"5",
+                "minLength":"6",
                 "pattern":"",
                 "required":true
             },
             "email": {                
-                "minLength":"5",
+                "minLength":"1",
                 "pattern":"^[a-zA-Z0-9._%+-]+@gmail\\.com$",
                 "required":true
             },
             "phone": {                
-                "minLength":"5",
+                "minLength":"10",
                 "pattern":"",
                 "required":true
             },
             "firstName":{
-                "minLength":"5",
+                "minLength":"2",
                 "pattern":"",
                 "required":true
             },
             "lastName":{
-                "minLength":"5",
+                "minLength":"2",
                 "pattern":"",
                 "required":true
             },
             "address":{
-                "minLength":"5",
+                "minLength":"1",
                 "pattern":"",
                 "required":false
             }
