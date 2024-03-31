@@ -5,7 +5,7 @@ const otherConfig = readJsonFiles('./config/otherFeaturesConfigs.json');
 const checkSessionMiddleware = async (req, res, next) => {
 
     try {
-   
+
         var refresh_token = req.cookies['refresh_token']
         if (!refresh_token) {
             return res.status(401).json({ success: false, message: "Token Not Found" });
@@ -28,5 +28,26 @@ const checkSessionMiddleware = async (req, res, next) => {
     }
 }
 
+const checkAccessTokenMiddleWare = async (req, res, next) => {
+    try {
+        const accessToken = req.headers.authorization.split('Bearer ').pop();
+        if (!accessToken) {
+            res.status(403).json({ success: false, message: "Forbidden" })
+        }
+        const tokenInfo = validateAccessToken(accessToken, otherConfig[projectName].tokenConfig.secretKey);
+        if (tokenInfo) {
+            req.tokenInfo = tokenInfo;
+            return next();
+        } else {
+            message_error = { error: 'Invalid or expired access token', 'success': false, message: 'permission error' };
+            logError({ ...message_error });
+            return res.status(403).json(message_error);
+        }
 
-module.exports = checkSessionMiddleware;
+
+    } catch (error) {
+        return res.status(401).json({ success: false, message: "Unautorization" })
+    }
+}
+
+module.exports = { checkSessionMiddleware, checkAccessTokenMiddleWare };
