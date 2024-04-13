@@ -3,10 +3,9 @@ const fs = require('fs');
 const { DateTime } = require('luxon');
 const { sendEmail } = require('./commonOperation');
 const MongoDBManager = require('./mongoServices');
-let {readJsonFiles} = require('./commonOperation');
+let { readJsonFiles } = require('./commonOperation');
 const otherConfig = readJsonFiles('./applicationConfig/otherFeaturesConfigs.json');
-mongoDBManagerObj = new MongoDBManager(); 
-
+const mongoConfig = readJsonFiles('./applicationConfig/mongoConfig.json');
 const lockFilePath = './scheduler.lock';
 //scheduler lock file should be removed before running the scheduler
 function acquireLock(callback) {
@@ -47,36 +46,35 @@ function myTask() {
 }
 async function emailFailureRetryAttempt() {
     try {
-        console.log("emailFailureRetryAttempt :", DateTime.now());
-        const threeDaysAgo = DateTime.now().minus({ days: 3 }).toJSDate();
-        // Query to retrieve data from the last 3 days
-        const data = await mongoDBManagerObj.findDocuments(
-            otherConfig["emailConfig"]["retryMailCol"],
-            { timestamp: { $gte: threeDaysAgo } },
-            {}
-        );
-        // console.log("data Attempt :", data);
-        if (data.length === 0) {
-            console.log("-------No retry attempt----");
-        } else {
-            let i =0;
-            let emailSend = setInterval(function () {
+        for (const projectName of mongoConfig.auth.databaseNames) {
+            if (mongoConfig[projectName]) {
                 console.log("emailFailureRetryAttempt :", DateTime.now());
-                let subject = data[i].subject;
-                let body = data[i].body;
-                let toEmail = data[i].toEmail;
-                console.log("id :",data[i]._id.toString(),'subject', data[i].subject,  "toEmail :", data[i].toEmail);
-                sendEmail(subject =subject, body= body, toEmail= toEmail,retryId = data[i]._id.toString());
-                i++;
-                if(i== data.length){
-                    clearInterval(emailSend);
+                const threeDaysAgo = DateTime.now().minus({ days: 3 }).toJSDate();
+                // Query to retrieve data from the last 3 days
+                const mongoDBManagerObj = new MongoDBManager(mongoConfig[projectName]['databaseName']);
+                const data = await mongoDBManagerObj.findDocuments(
+                    otherConfig["emailConfig"]["retryMailCol"],
+                    { timestamp: { $gte: threeDaysAgo } },
+                    {}
+                );
+                // console.log("data Attempt :", data);
+                if (data.length === 0) {
+                    console.log("-------No retry attempt----");
+                } else {
+                    for (let i = 0; i < data.length; i++) {
+                        console.log("emailFailureRetryAttempt :", DateTime.now());
+                        const { subject, body, toEmail, _id } = data[i];
+                        console.log("id :", _id.toString(), 'subject', subject, "toEmail :", toEmail);
+                        await sendEmail(subject, body, toEmail, _id.toString());
+                    }
                 }
-            }, 1500);
+            }
         }
     } catch (err) {
         console.log("Error in emailFailureRetryAttempt:", err);
     }
 }
+
 
 // Define your task settings
 const taskName = "emailFailureRetryAttempt";
