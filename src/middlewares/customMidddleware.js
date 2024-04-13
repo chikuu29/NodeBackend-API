@@ -4,9 +4,7 @@ const MongoDBManager = require('../commonServices/mongoServices');
 const otherConfig = readJsonFiles('./applicationConfig/otherFeaturesConfigs.json');
 const apiRequirementsConfig = readJsonFiles('./applicationConfig/apiRequirements.json');
 
-const mongoConfig = readJsonFiles('./applicationConfig/mongoConfig.json');
-const auth = mongoConfig.auth;
-const mongoDBManagerObj = new MongoDBManager(auth.databaseName);  // Instantiate the MongoDBManager
+const mongoConfig = readJsonFiles('./applicationConfig/mongoConfig.json'); // Instantiate the MongoDBManager
 
 
 const APIMiddleware = async (req, res, next) => {
@@ -89,6 +87,7 @@ const isAllowed = async(req, tokenInfo) => {
                 { 'settingName': "userIdWithRoles" }
             ]
         };
+        let mongoDBManagerObj = new MongoDBManager(mongoConfig[projectName]['databaseName']);
         const rolesInfoArr = await mongoDBManagerObj.findDocuments(mongoConfig[projectName].apiSettings, queryConditions, {});
         let apisAllowedRoles = {};
         let userIdWithRoles = {};
@@ -114,8 +113,8 @@ const isVerified = async(req, tokenInfo) => {
         const queryConditions = {
            'userName': tokenInfo.userName,
         };
+        let mongoDBManagerObj = new MongoDBManager(mongoConfig[projectName]['databaseName']);
         const userEmailVefData = await mongoDBManagerObj.findDocuments(mongoConfig[projectName].userCol, queryConditions, {emailVefData:1,'_id':0});
-        console.log('userEmailVefData--', userEmailVefData);
         return userEmailVefData[0].emailVefData.verified == true;
     } catch (err) {
         console.error('Exception in middleware', err);

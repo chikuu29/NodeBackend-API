@@ -11,9 +11,8 @@ const mongoConfig = readJsonFiles('./applicationConfig/mongoConfig.json');
 const apiRequirementsConfig = readJsonFiles('./applicationConfig/apiRequirements.json');
 const otherConfig = readJsonFiles('./applicationConfig/otherFeaturesConfigs.json');
 
-const mongoDBManagerObj = new MongoDBManager();
 
-function send_otp_email(to_email, otp) {
+function send_otp_email(to_email, otp,projectName) {
     const subject = "Your OTP for account verification";
     const body = `
     <html>
@@ -40,7 +39,7 @@ function send_otp_email(to_email, otp) {
     </html>
 
     `;
-    sendEmail(subject, body, to_email);
+    sendEmail(subject, body, to_email, projectName);
 }
 
 exports.registerUser = async (req, res) => {
@@ -69,6 +68,7 @@ exports.registerUser = async (req, res) => {
             return res.status(500).json(message_error);
         }
         // console.log('userData :', userData);
+        let mongoDBManagerObj = new MongoDBManager(mongoConfig[projectName]['databaseName']);
         const existingUser = await mongoDBManagerObj.findDocuments(mongoConfig[projectName].userCol, { userName: userData.userName }, {});
         if (existingUser.length === 0) {
             const hashed_password = await bcrypt.hash(userData.password, 10);
@@ -86,7 +86,7 @@ exports.registerUser = async (req, res) => {
             userData['numOfLoginFailAttempt'] = 0
             userData['blockTillLogInTimeStamp'] = DateTime.now()
             // You need to implement the send_otp_email function
-            send_otp_email(userData.email, otp);          
+            send_otp_email(userData.email, otp,projectName);          
             var { emailVefData, ...userDataSendRes } = userData;
             await mongoDBManagerObj.insertDocument(mongoConfig[projectName].userCol, userData);
             const message_info = { message: `User: ${userData.userName} registered successfully`, projectName, 'success': true, data: userDataSendRes };
@@ -174,8 +174,9 @@ exports.forgotPasswordOnUserId = async (request, res) => {
             }
 
             console.log('userData--', dbUserData);
-            send_otp_email(dbUserData['email'], otp);
+            send_otp_email(dbUserData['email'], otp,projectName);
             console.log('------5');
+            let mongoDBManagerObj = new MongoDBManager(mongoConfig[projectName]['databaseName']);
             await mongoDBManagerObj.updateDocument(mongoConfig[projectName]['userCol'], { 'userName': dbUserData['userName'] }, { '$set': dbUserData });
 
             const message_info = { message: `User: ${userData['userName']} Otp sent to your registered email`, 'projectName': projectName, 'success': true };
@@ -219,7 +220,8 @@ exports.passWordResetVerification = async (request, res) => {
             return res.status(500).json(message_error);
         }
         console.log('-----5', userData);
-
+        
+        let mongoDBManagerObj = new MongoDBManager(mongoConfig[projectName]['databaseName']);
         const userDbArr = await mongoDBManagerObj.findDocuments(mongoConfig[projectName]['userCol'], { 'userName': userData['userName'] }, {});
         const userDb = userDbArr.length > 0 ? userDbArr[0] : {};
 
@@ -307,7 +309,8 @@ exports.loginUser = async (req, res) => {
             logError({ ...message_error });
             return res.status(500).json(message_error);
         }
-
+        
+        let mongoDBManagerObj = new MongoDBManager(mongoConfig[projectName]['databaseName']);
         const storedData = await mongoDBManagerObj.findDocuments(mongoConfig[projectName]['userCol'], { 'userName': userData['userName'] }, {});
 
         if (storedData.length === 0) {
@@ -394,7 +397,8 @@ exports.emailVerifyUser = async (req, res) => {
             logError({ ...message_error });
             return res.status(400).json(message_error);
         }
-
+        
+        let mongoDBManagerObj = new MongoDBManager(mongoConfig[projectName]['databaseName']);
         const userDataFromDbArr = await mongoDBManagerObj.findDocuments(mongoConfig[projectName].userCol, { 'userName': userData.userName }, {});
         const userDataFromDb = userDataFromDbArr.length > 0 ? userDataFromDbArr[0] : {};
 
@@ -519,7 +523,7 @@ exports.updateUserEmail = async (request, res) => {
             'emailVefData.numOfEmailVefFailAttempt': 0,
             'emailVefData.blockedTillEmailVefTimeStamp': DateTime.now(),
         };
-        send_otp_email(updateDataTemp.email, otp); 
+        send_otp_email(updateDataTemp.email, otp,projectName); 
 
         await mongoDBManagerObj.updateDocument(mongoConfig[projectName]['userCol'], { userName: userData.userName }, { '$set': updateDataTemp });
         message_info = { message: 'Email added  successfully to verify call verifyUser api', 'success': true };
@@ -607,7 +611,7 @@ exports.AssignRoleToUser = async (request, res) => {
         const userName = request.body.userName;
         const userNameToBeAssignedRole = request.body.userNameToAssignRole;
         const assignedRoleName = request.body.assignedRoleName;
-
+        let mongoDBManagerObj = new MongoDBManager(mongoConfig[projectName]['databaseName']);
         const rolesArr = await mongoDBManagerObj.findDocuments(mongoConfig[projectName]['apiSettings'], { settingName: "ApisAllowedRoles" }, {});
         if (rolesArr.length === 0 || !rolesArr[0][assignedRoleName]) {
             message_error = { message: `Invalid role name ${assignedRoleName}`, error: `Invalid role name ${assignedRoleName}`, 'success': false };
@@ -662,6 +666,7 @@ exports.updateUserBasicData = async (request, res) => {
             logError({ ...message_error });
             return res.status(400).json(message_error);
         }
+        let mongoDBManagerObj = new MongoDBManager(mongoConfig[projectName]['databaseName']);
 
         console.log('-----5', mongoConfig[projectName]['userCol']);
         const userDataFromDbArr = await mongoDBManagerObj.findDocuments(mongoConfig[projectName]['userCol'], { 'userName': userData['userName'] }, {});
