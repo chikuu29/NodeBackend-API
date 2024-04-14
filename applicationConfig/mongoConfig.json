@@ -2,7 +2,7 @@
      "auth" :{
          "user" : "dynamicApp",
          "password" : "dynamicApp",
-         "databaseNames" :["databaseMongo","databaseMongo2","databaseMongo3"],
+         "databaseName" : "databaseMongo",
          "authMechanism" : "SCRAM-SHA-256",
          "port" : 27017,
          "host" :"127.0.0.1"
@@ -11,8 +11,7 @@
          "userCol":"user",
          "passwordHashingKey":"fFFfvdscdd323434gfgf3frrgrht55454",
          "threadCol":"threadOne",
-         "apiSettings":"apiSettings",
-         "databaseName":"databaseMongo"
+         "apiSettings":"apiSettings"
     }
     
  }

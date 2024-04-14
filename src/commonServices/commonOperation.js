@@ -38,12 +38,9 @@ const decryptJsonFile = (filename, key) => {
     }
 };
 
-filename = 'applicationConfig/mongoConfig.json';
-filesNameArray = ['mongoConfig','otherFeaturesConfigs','apiRequirements'];
+// filename = 'applicationConfig/mongoConfig.json';
 // Encrypt the JSON file
-filesNameArray.forEach(element => {
-    encryptJsonFile('applicationConfig/'+element+'.json', key);
-});
+// encryptJsonFile(filename, key)
 
 // Decrypt the encrypted JSON file
 // decryptJsonFile(filename + '.enc', key)
@@ -67,7 +64,11 @@ const readJsonFiles = (filePath, readEncryptFile = readFromEncryptedFile) => {
 
 // Read JSON files
 const otherConfig = readJsonFiles('./applicationConfig/otherFeaturesConfigs.json');
-const mongoConfig = readJsonFiles('./applicationConfig/mongoConfig.json');
+let mongoDBManagerObj;
+setTimeout(() => {
+    const MongoDBManager = require('./mongoServices');
+    mongoDBManagerObj = new MongoDBManager();
+}, 500);
 
 // Validate length
 const validateLength = (data, minLen, maxLen) => {
@@ -122,7 +123,7 @@ let emailAuth = (smtpServer = otherConfig['emailConfig'].smtp_server, smtpPort =
     }
 }
 let transporterObj = emailAuth();
-async function sendEmail(subject, body, toEmail,projectName, retryId = 0, transporter = transporterObj, senderEmail = otherConfig['emailConfig'].sender_email) {
+async function sendEmail(subject, body, toEmail, retryId = 0, transporter = transporterObj, senderEmail = otherConfig['emailConfig'].sender_email) {
     try {
         // Create a SMTP transporter object
 
@@ -134,11 +135,6 @@ async function sendEmail(subject, body, toEmail,projectName, retryId = 0, transp
             subject: subject,
             html: body
         });
-        let mongoDBManagerObj;
-        // setTimeout(() => {
-        const MongoDBManager = require('./mongoServices');
-        mongoDBManagerObj = new MongoDBManager(mongoConfig[projectName]['databaseName']);
-        // }, 500);
         if (retryId != 0) {
             mongoDBManagerObj.deleteDocument(otherConfig["emailConfig"]['retryMailCol'], { "toEmail": toEmail, subject: subject, body: body })
         }

@@ -16,18 +16,10 @@ const port = process.env.PORT || 7000;
 if (cluster.isMaster) {
     console.log(`Master ${process.pid} is running`);
 
-    // Fork workers with a delay
-    let forkIndex = 0;
-    const forkWorkerWithDelay = () => {
-        if (forkIndex < numCPUs) {
-            setTimeout(() => {
-                cluster.fork();
-                forkIndex++;
-                forkWorkerWithDelay();
-            }, 2000);
-        }
-    };
-    forkWorkerWithDelay();
+    // Fork workers.
+    for (let i = 0; i < numCPUs; i++) {
+        cluster.fork();
+    }
 
     cluster.on('exit', (worker, code, signal) => {
         console.log(`worker ${worker.process.pid} died`);
@@ -42,3 +34,4 @@ if (cluster.isMaster) {
         console.log(`Worker ${process.pid} started server at port ${port}`);
     });
 }
+

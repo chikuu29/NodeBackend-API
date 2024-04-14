@@ -5,35 +5,30 @@ const mongoConfig = commonOperation.readJsonFiles('applicationConfig/mongoConfig
 const auth = mongoConfig.auth;
 // console.log('mongoConfig :', mongoConfig);
 
-async function connectMongo(user, password, databaseNames, authMechanism, port, host) {
+async function connectMongo(user, password, databaseName, authMechanism, port, host) {
     try {
-        const uri = `mongodb://${user}:${password}@${host}:${port}/?authSource=${'databaseMongo'}&authMechanism=${authMechanism}`;
+        const uri = `mongodb://${user}:${password}@${host}:${port}/?authSource=${databaseName}&authMechanism=${authMechanism}`;
         const client = new MongoClient(uri);
         await client.connect();
         console.log("---->connected to mongo<-----");
-        let dbs ={};
-        databaseNames.forEach(element => {
-            dbs[element+'Key'] = client.db(element);
-        });
-        return dbs;
+        return client.db(databaseName);
     } catch (err) {
         console.error("error in mongo connection:", err);
         return null;
     }
 }
-let dbs;
+let db;
 async function connect() {
- dbs = await connectMongo(auth.user, auth.password, auth.databaseNames, auth.authMechanism, auth.port, auth.host);
+ db = await connectMongo(auth.user, auth.password, auth.databaseName, auth.authMechanism, auth.port, auth.host);
 }
 connect();
 class MongoDBManager {
     constructor(database_name) {
         this.database_name = database_name;
-        this.db= dbs[this.database_name+'Key'];
     }
 
     getCollection(collection_name) {
-        return this.db.collection(collection_name);
+        return db.collection(collection_name);
     }
 
     async insertDocument(collection_name, document) {
