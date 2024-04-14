@@ -126,13 +126,14 @@ exports.forgotPasswordOnUserId = async (request, res) => {
         const userFields = Object.keys(userFieldsConfig);
         console.log('-----3', userFields);
 
-        const userData = requestDataInjectionCheck(userFields, userFieldsConfig, req.body);
+        const userData = requestDataInjectionCheck(userFields, userFieldsConfig, request.body);
         if (userData.error) {
             const message_error = { message: 'input error', error: JSON.stringify(userData.error), 'success': false };
             logError({ ...message_error });
             return res.status(500).json(message_error);
         }
-
+        
+        let mongoDBManagerObj = new MongoDBManager(mongoConfig[projectName]['databaseName']);
         const dbUserDataArr = await mongoDBManagerObj.findDocuments(mongoConfig[projectName]['userCol'], { 'userName': userData['userName'] }, {});
 
         if (dbUserDataArr.length === 0) {
@@ -176,7 +177,6 @@ exports.forgotPasswordOnUserId = async (request, res) => {
             console.log('userData--', dbUserData);
             send_otp_email(dbUserData['email'], otp,projectName);
             console.log('------5');
-            let mongoDBManagerObj = new MongoDBManager(mongoConfig[projectName]['databaseName']);
             await mongoDBManagerObj.updateDocument(mongoConfig[projectName]['userCol'], { 'userName': dbUserData['userName'] }, { '$set': dbUserData });
 
             const message_info = { message: `User: ${userData['userName']} Otp sent to your registered email`, 'projectName': projectName, 'success': true };

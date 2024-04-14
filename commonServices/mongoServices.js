@@ -10,7 +10,7 @@ async function connectMongo(mongoConfig) {
         let url;
         let connectionConfig = mongoConfig.auth
         if (connectionConfig.isAtlas) {
-            url = `mongodb+srv://${connectionConfig.user}:${connectionConfig.password}@${connectionConfig.host}/${connectionConfig.databaseName}?retryWrites=true&w=majority&appName=Cluster0`;
+            url = `mongodb+srv://${connectionConfig.user}:${connectionConfig.password}@${connectionConfig.host}/${connectionConfig.databaseName}?retryWrites=true&w=majority&appName=${connectionConfig.cluster}`;
             // uri =`mongodb+srv://${connectionConfig.user}:${connectionConfig.password}@${connectionConfig.cluster}.xjva8pb.mongodb.net/?retryWrites=true&w=majority&appName=${connectionConfig.cluster}`
             // uri = `mongodb+srv://${connectionConfig.user}:${connectionConfig.password}@${connectionConfig.host}/${databaseNames[0]}?retryWrites=true&w=majority`;
         } else {
@@ -29,7 +29,7 @@ async function connectMongo(mongoConfig) {
         return null;
     }
 }
-
+let dbs;
 async function connect() {
     const mongoConfig = commonOperation.readJsonFiles('applicationConfig/mongoConfig.json');
     const auth = mongoConfig.auth;

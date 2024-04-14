@@ -24,7 +24,7 @@ if (cluster.isMaster) {
                 cluster.fork();
                 forkIndex++;
                 forkWorkerWithDelay();
-            }, 2000);
+            }, 500);
         }
     };
     forkWorkerWithDelay();
