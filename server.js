@@ -37,6 +37,15 @@ if (cluster.isMaster) {
     app.use(cors(corsOption));
     app.use(express.json());
     app.use('/user', AuthRoutes);
+    const auth = require('http-auth');
+
+    const basic = auth.basic({ realm: 'Monitor Area' }, function (user, pass, callback) {
+        callback(user === 'adminOne' && pass === 'adminOne');
+    });
+    // Set '' to config path to avoid middleware serving the html page (path must be a string not equal to the wanted route)
+    const statusMonitor = require('express-status-monitor')({ path: '' });
+    app.use(statusMonitor.middleware); // use the "middleware only" property to manage websockets
+    app.get('/status', basic.check(statusMonitor.pageRoute));
 
     app.listen(port, () => {
         console.log(`Worker ${process.pid} started server at port ${port}`);
