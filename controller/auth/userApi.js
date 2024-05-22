@@ -45,11 +45,11 @@ function send_otp_email(to_email, otp,projectName) {
 exports.registerUser = async (req, res) => {
     try {
         // console.log('req.body :', req.body);
-        if (!req.body || !req.body.projectName) {
-            const message_error = { error: 'Please provide Project Name', 'success': false, message: 'input error' };
-            logError({ ...message_error });
-            return res.status(400).json(message_error);
-        }
+        // if (!req.body || !req.body.projectName) {
+        //     const message_error = { error: 'Please provide Project Name', 'success': false, message: 'input error' };
+        //     logError({ ...message_error });
+        //     return res.status(400).json(message_error);
+        // }
 
         const { projectName } = req.body;
         if (!apiRequirementsConfig[projectName]) {
@@ -290,9 +290,9 @@ exports.loginUser = async (req, res) => {
     try {
         const requestData = req.body;
 
-        if (!requestData || !requestData || !requestData.projectName) {
-            return res.status(400).json({ error: 'Please provide Project Name', 'success': false, message: 'Input error' });
-        }
+        // if (!requestData || !requestData || !requestData.projectName) {
+        //     return res.status(400).json({ error: 'Please provide Project Name', 'success': false, message: 'Input error' });
+        // }
 
         const projectName = requestData.projectName;
 

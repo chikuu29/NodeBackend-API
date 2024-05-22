@@ -1,5 +1,5 @@
 {
-     "authAtlas": {
+     "auth": {
           "user": "singhavinashkumar069",
           "password": "Achyut%400987",
           "databaseNames": [
@@ -13,7 +13,7 @@
           "isAtlas": true,
           "cluster": "clusterone"
      },
-     "auth": {
+     "authCompass": {
           "user": "dynamicApp",
           "password": "dynamicApp",
           "databaseNames": [
