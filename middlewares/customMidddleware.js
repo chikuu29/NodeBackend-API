@@ -13,8 +13,8 @@ const APIMiddleware = async (req, res, next) => {
         const requestBody = req.body;
         console.log('requestBody', requestBody);
         let apiKeyProjectName = req.header('apiKey')?req.header('apiKey').split('//'):['',''];
-        const apiKey = requestBody.apiKey || apiKeyProjectName[0];
-        const projectName = requestBody.projectName || apiKeyProjectName[1];
+        const apiKey = requestBody.apiKey || apiKeyProjectName[1];
+        const projectName = requestBody.projectName || apiKeyProjectName[0];
         req.body.projectName = projectName;
         console.log('apikey--', apiKey, 'projectName--', projectName)
         if (!apiKey || !projectName) {

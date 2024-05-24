@@ -6,7 +6,8 @@ const cronScheduler = require('./commonServices/cronScheduler');
 //scheduler lock file should be removed before running the scheduler
 
 const corsOption = {
-    "origin": "*"
+    "origin": ["http://localhost:4200"],
+    "credentials": true,
 };
 
 const AuthRoutes = require('./routes/AuthUrl');
