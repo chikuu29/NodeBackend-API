@@ -126,7 +126,7 @@ exports.forgotPasswordOnUserId = async (request, res) => {
         const userFields = Object.keys(userFieldsConfig);
         console.log('-----3', userFields);
 
-        const userData = requestDataInjectionCheck(userFields, userFieldsConfig, request.body);
+        const userData = requestDataInjectionCheck(userFields, userFieldsConfig,request.query || request.body);
         if (userData.error) {
             const message_error = { message: 'input error', error: JSON.stringify(userData.error), 'success': false };
             logError({ ...message_error });
@@ -213,7 +213,7 @@ exports.passWordResetVerification = async (request, res) => {
         const userFields = Object.keys(userFieldsConfig);
         console.log('-----3', userFields);
 
-        const userData = requestDataInjectionCheck(userFields, userFieldsConfig, req.body);
+        const userData = requestDataInjectionCheck(userFields, userFieldsConfig, request.body);
         if (userData.error) {
             const message_error = { message: 'input error', error: JSON.stringify(userData.error), 'success': false };
             logError({ ...message_error });
@@ -295,7 +295,7 @@ exports.loginUser = async (req, res) => {
         // }
 
         const projectName = requestData.projectName;
-
+        console.log('projectName-->', projectName);
         if (!apiRequirementsConfig[projectName]) {
             return res.status(400).json({ error: 'projectName does not exist', 'success': false, message: 'Input error' });
         }

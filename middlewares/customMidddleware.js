@@ -23,7 +23,7 @@ const APIMiddleware = async (req, res, next) => {
             return res.status(400).json(message_error);
         }
         if (!apiRequirementsConfig[projectName]) {
-            message_error = { error: 'projectName does not exist', 'success': false, message: 'input error' };
+            message_error = { error: 'project does not exist', 'success': false, message: 'input error' };
             logError({ ...message_error });
             return res.status(400).json(message_error);
         }
