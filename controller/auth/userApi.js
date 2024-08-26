@@ -325,7 +325,7 @@ exports.loginUser = async (req, res) => {
             const providedPassword = userData['password'];
             if (storedData[0].blockTillLogInTimeStamp > DateTime.now()) {
                 console.log("User is blocked till", storedData[0].blockTillLogInTimeStamp);
-                return res.status(200).json({ message: 'User is blocked', 'success': false, message: 'User is blocked' });
+                return res.status(401).json({ message: 'User is blocked', 'success': false, message: 'Your account is blocked due to too many failed login attempts. Please wait and try again later. (' +  new Date(storedData[0].blockTillLogInTimeStamp).getMinutes() + ' Minutes )'});
             }
             if (bcrypt.compareSync(providedPassword, storedHashedPassword)) {
                 console.log("Password is correct");
@@ -361,7 +361,7 @@ exports.loginUser = async (req, res) => {
                     tokens.refresh_token.toString(),
                     {
                         httpOnly: true,
-                        sameSite: 'None',
+                        
                         secure: true,
                         maxAge: 2 * 24 * 60 * 60 * 1000, // Set cookie expiration time (2 days)
                         path: '/' // Set a specific path for the refresh token cookie

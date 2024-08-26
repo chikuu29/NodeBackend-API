@@ -15,7 +15,6 @@ const checkSessionMiddleware = async (req, res, next) => {
                 requestedDomain.toString(),
                 {
                     httpOnly: true,
-                    sameSite: 'None',
                     secure: true,
                     maxAge: 2 * 24 * 60 * 60 * 1000, // Set cookie expiration time (2 days)
                     path: '/' // Set a specific path for the refresh token cookie
@@ -26,7 +25,7 @@ const checkSessionMiddleware = async (req, res, next) => {
                 "projectOne",
                 {
                     httpOnly: true,
-                    sameSite: 'None',
+                    
                     secure: true,
                     maxAge: 2 * 24 * 60 * 60 * 1000, // Set cookie expiration time (2 days)
                     path: '/' // Set a specific path for the refresh token cookie
@@ -35,14 +34,14 @@ const checkSessionMiddleware = async (req, res, next) => {
             return res.status(401).json({ success: false, message: "Login State Lost" });
         } else {
 
-            console.log("project Name", projectName);
+            // console.log("project Name", projectName);
             const validateTokenInfo = validateAccessToken(refresh_token, otherConfig[projectName].tokenConfig.secretKey);
             if (validateTokenInfo) {
                 req.validateTokenInfo = validateTokenInfo;
                 req.projectName = projectName;
                 return next();
             } else {
-                return res.status(401).json({ success: false, message: "Token Not Provided" });
+                return res.status(401).json({ success: false, message: "Login State Is Lost!" });
             }
         }
 

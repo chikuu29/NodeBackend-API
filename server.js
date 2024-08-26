@@ -12,6 +12,7 @@ const corsOption = {
 };
 const AuthRoutes = require('./routes/AuthUrl');
 const productRoutes = require('./routes/productRoutes')
+const AppRoutes = require('./routes/AppRouter')
 const port = process.env.PORT || 7000;
 
 if (cluster.isMaster) {
@@ -62,6 +63,7 @@ if (cluster.isMaster) {
     );
     res.status(200).send('Application Is Healthy');
   })
+  app.use('/app',AppRoutes)
   app.use('/auth', AuthRoutes);
   app.use("/v1/product", productRoutes)
   app.listen(port, () => {
