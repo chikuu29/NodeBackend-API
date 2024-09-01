@@ -13,6 +13,8 @@ router.get('/logout', authenticationMiddleware.checkSessionMiddleware, (req, res
   // Assuming the cookie name is 'session'
   res.clearCookie('refresh_token', {
     httpOnly: true,
+    sameSite:'none',
+    httpOnly:true,
     secure: true
   });
   const logoutRes={
