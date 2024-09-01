@@ -15,7 +15,7 @@ const generateConfig=async(req,res)=>{
             // logInfo({ ...message_info });
             const response={
                 success:true,
-                result:app_config
+                result:{'config':app_config[0]['config']}
             }
             return res.status(200).json(response);
         }else{
