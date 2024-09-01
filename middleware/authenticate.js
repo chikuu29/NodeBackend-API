@@ -14,6 +14,7 @@ const checkSessionMiddleware = async (req, res, next) => {
                 'callback-url',
                 requestedDomain.toString(),
                 {
+                    sameSite:"None",
                     httpOnly: true,
                     secure: true,
                     maxAge: 2 * 24 * 60 * 60 * 1000, // Set cookie expiration time (2 days)
@@ -25,7 +26,7 @@ const checkSessionMiddleware = async (req, res, next) => {
                 "projectOne",
                 {
                     httpOnly: true,
-                    
+                    sameSite: "None",
                     secure: true,
                     maxAge: 2 * 24 * 60 * 60 * 1000, // Set cookie expiration time (2 days)
                     path: '/' // Set a specific path for the refresh token cookie
