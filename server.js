@@ -7,7 +7,7 @@ const cronScheduler = require('./commonServices/cronScheduler');
 const path = require('path');
 //scheduler lock file should be removed before running the scheduler
 const corsOption = {
-  origin: ["http://localhost:3000"],
+  origin: ["http://localhost:3000","https://myomspanel.onrender.com"],
   credentials: true
 };
 const AuthRoutes = require('./routes/AuthUrl');
