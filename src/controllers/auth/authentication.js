@@ -1,7 +1,7 @@
 
 const { readJsonFiles, getNewAccessToken } = require('../../commonServices/commonOperation');
-const apiRequirementsConfig = readJsonFiles('./config/apiRequirements.json');
-const otherConfig = readJsonFiles('./config/otherFeaturesConfigs.json');
+const apiRequirementsConfig = readJsonFiles('./src/config/apiRequirements.json');
+const otherConfig = readJsonFiles('./src/config/otherFeaturesConfigs.json');
 // const MongoDBManager = require('../../commonServices/mongoServices');
 // const mongoDBManagerObj = new MongoDBManager();
 // const mongoConfig = readJsonFiles('./config/mongoConfig.json');

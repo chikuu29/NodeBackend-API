@@ -1,7 +1,7 @@
 
 const { readJsonFiles, checkValidKeyInDictionary, validateAccessToken, logError, logInfo, logWarning } = require('../commonServices/commonOperation');
-const apiRequirementsConfig = readJsonFiles('./config/apiRequirements.json');
-const otherConfig = readJsonFiles('./config/otherFeaturesConfigs.json');
+const apiRequirementsConfig = readJsonFiles('./src/config/apiRequirements.json');
+const otherConfig = readJsonFiles('./src/config/otherFeaturesConfigs.json');
 const checkSessionMiddleware = async (req, res, next) => {
 
     try {

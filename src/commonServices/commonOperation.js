@@ -66,8 +66,8 @@ const readJsonFiles = (filePath, readEncryptFile = readFromEncryptedFile) => {
 const otherConfig = readJsonFiles('./src/config/otherFeaturesConfigs.json');
 let mongoDBManagerObj;
 setTimeout(() => {
-    const MongoDBManager = require('./mongoServices');
-    mongoDBManagerObj = new MongoDBManager();
+    // const MongoDBManager = require('./mongoServices');
+    // mongoDBManagerObj = new MongoDBManager();
 }, 500);
 
 // Validate length

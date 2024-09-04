@@ -3,18 +3,20 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const path = require('path');
 require('dotenv').config();
+// const MongoDBManager=require('./services/mongoService')
+
+//Configure All Ther Services and Manager
+// MongoDBManager.configure()
 
 const corsOption = {
   origin: process.env.CORS_ORIGINS.split(','),
   credentials: true
 };
 
-const AuthRoutes = require('./routes/AuthUrl');
+// const AuthRoutes = require('./routes/AuthUrl');
 const AppRoutes = require('./routes/AppRouter');
-
 const app = express();
 const port = process.env.PORT || 7000;
-
 // Use middleware
 app.use(cookieParser());
 app.use(cors(corsOption));
@@ -43,10 +45,21 @@ app.get('/v1/check', (req, res) => {
   });
   res.status(200).send('Application Is Healthy');
 });
+// const apiKey = 'your-secret-api-key';
+
+// app.use((req, res, next) => {
+//     const key = req.headers['x-api-key'];
+
+//     if (key === apiKey) {
+//         next();
+//     } else {
+//         res.status(403).send('Forbidden');
+//     }
+// });
 
 // Route handling
 app.use('/app', AppRoutes);
-app.use('/auth', AuthRoutes);
+// app.use('/auth', AuthRoutes);
 
 // Global error handler
 app.use((err, req, res, next) => {
@@ -56,5 +69,7 @@ app.use((err, req, res, next) => {
 
 // Start the server
 app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
+  console.log(`🚀 SERVER RUNNING 🚀 AT PORT ${port}`);
 });
+
+

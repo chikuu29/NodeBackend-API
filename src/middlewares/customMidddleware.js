@@ -1,10 +1,10 @@
 const { log } = require('util');
 const { readJsonFiles, checkValidKeyInDictionary, validateAccessToken, logError, logInfo, logWarning } = require('../commonServices/commonOperation');
 const MongoDBManager = require('../commonServices/mongoServices');
-const otherConfig = readJsonFiles('./config/otherFeaturesConfigs.json');
-const apiRequirementsConfig = readJsonFiles('./config/apiRequirements.json');
+const otherConfig = readJsonFiles('./src/config/otherFeaturesConfigs.json');
+const apiRequirementsConfig = readJsonFiles('./src/config/apiRequirements.json');
 
-const mongoConfig = readJsonFiles('./config/mongoConfig.json');
+const mongoConfig = readJsonFiles('./src/config/mongoConfig.json');
 const auth = mongoConfig.auth;
 const mongoDBManagerObj = new MongoDBManager();  // Instantiate the MongoDBManager
 const APIMiddleware = async (req, res, next) => {
