@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const customMiddleware = require('../middlewares/customMidddleware');
-const authenticationController = require("../controllers/auth/authentication")
-const userController = require('../controllers/auth/userApi');
+const customMiddleware = require('../../middlewares/customMidddleware');
+const authenticationController = require("../../controllers/auth/authentication")
+const userController = require('../../controllers/auth/userApi');
 
-const authenticationMiddleware = require('../middlewares/authenticate');
+const authenticationMiddleware = require('../../../middlewares/authenticate');
 
 router.post('/register', userController.registerUser);
 router.get('/forGotPasswordOnUserId', customMiddleware, userController.forgotPasswordOnUserId);
