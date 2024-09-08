@@ -23,6 +23,7 @@ class ConfigLoader {
         // Load all your JSON configuration files here
         this.configs.serverConfig = this.loadConfig('serverConfig.json');
         this.configs.databaseConfig = this.loadConfig('mongoConfig.json');
+        this.configs.apiRequirementConfig = this.loadConfig('apiRequirements.json');
         // Add more configurations as needed
     }
 

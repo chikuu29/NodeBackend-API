@@ -88,17 +88,17 @@ const identifyApplication = async (req, res, next) => {
             // const validateTokenInfo = validateAccessToken(refresh_token, otherConfig[projectName].tokenConfig.secretKey);
             // if (validateTokenInfo) {
             //     req.validateTokenInfo = validateTokenInfo;
-            //     req.projectName = projectName;
+                req.REQUESTED_APP_NAME = req['headers']['x-requested-from'];
                 return next();
             // } else {
             //     return res.status(401).json({ success: false, message: "Login State Is Lost!" });
             // }
             // return next();
         }else{
-            return res.status(401).json({ success: false, message: "Unautorization" });
+            return res.status(401).json({ success: false, message: "Unautorization Access" });
         }
     } catch (error) {
-        return res.status(401).json({ success: false, message: "Unautorization" });
+        return res.status(401).json({ success: false, message: "Unautorization Access" });
     }
 
 }

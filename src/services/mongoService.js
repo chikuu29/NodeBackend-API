@@ -75,7 +75,7 @@ class MongoDBManager {
 
 
 module.exports = {
-    momgoClient: new MongoDBManager()
+    mongoClient: new MongoDBManager()
 }
 
 

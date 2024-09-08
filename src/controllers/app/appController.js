@@ -1,7 +1,7 @@
 
 
 // const MongoDBManager = require('../../commonServices/mongoServices');
-const {momgoClient}=require('../../services/mongoService')
+const {mongoClient}=require('../../services/mongoService')
 
 
 
@@ -12,7 +12,7 @@ const generateConfig=async(req,res)=>{
     try {
         // var refresh_token = req.cookies['refresh_token']
         const projectName = req.body.projectName;
-        const app_config = await momgoClient.fetch("app_config", {type:"menu",id:1}, {});
+        const app_config = await mongoClient.fetch("app_config", {type:"menu",id:1}, {});
         if(app_config.length!=0){
             // const message_info = { error: `User: ${userData.userName} already exists`, projectName, 'success': false, message: 'User already exists' };
             // logInfo({ ...message_info });
