@@ -34,7 +34,7 @@ app.get('/', (req, res) => {
 
 // Import routes
 const authRoutesV1 = require('./routes/v1/authRouter');
-const appRoutesV1 = require('./routes/v1/AppRouter');
+const appRoutesV1 = require('./routes/v1/appRouter');
 
 // Register routes
 app.use('/v1/app', appRoutesV1);
