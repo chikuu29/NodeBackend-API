@@ -1,14 +1,14 @@
 const express = require('express');
 const router = express.Router();
 // const customMiddleware = require('../../middlewares/customMidddleware');
-// const authenticationController = require("../../middlewares/identifyApplicationMiddlewares")
-const userController = require('../../controllers/v1/auth/userController');
+const {checkSession} = require("../../middlewares/identifyApplicationMiddlewares")
+const { loginUser, createSession } = require('../../controllers/v1/auth/userController');
 
 // const authenticationMiddleware = require('../../../middlewares/v1/authenticate');
 
 // router.post('/register', userController.registerUser);
 // router.get('/forGotPasswordOnUserId', customMiddleware, userController.forgotPasswordOnUserId);
-router.post('/login', userController.loginUser);
+router.post('/login', loginUser);
 // router.get('/logout', authenticationMiddleware.checkSessionMiddleware, (req, res) => {
 //   // Assuming the cookie name is 'session'
 //   res.clearCookie('refresh_token', {
@@ -26,7 +26,7 @@ router.post('/login', userController.loginUser);
 //   // Send a response indicating successful logout
 //   // res.status(200).send('Logged out successfully');
 // });
-// router.get("/session", authenticationController.grantPermission);
+router.get("/session",checkSession, createSession);
 // router.get('/refresh', authenticationMiddleware.checkSessionMiddleware, authenticationMiddleware.checkAccessTokenMiddleWare, authenticationController.newAccessToken);
 
 // router.post('/passWordResetVerification', customMiddleware, userController.passWordResetVerification);

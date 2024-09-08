@@ -288,9 +288,10 @@ const { DateTime } = require('luxon');
 // console.log(config);
 const config = require('../../../configLoader');
 const { dataSanitizer } = require('../../../utils/dataSanitizerUtils')
-const {mongoClient}=require('../../../services/mongoService')
+const { mongoClient } = require('../../../services/mongoService')
+const { generateTokens ,getNewAccessToken} = require('./authentication')
 
-exports.loginUser = async (req, res) => {
+const loginUser = async (req, res) => {
     console.log("===CALLING LOGIN CONTROLLRS===");
 
     try {
@@ -300,9 +301,6 @@ exports.loginUser = async (req, res) => {
         if (!requestData || !REQUESTED_APP_NAME) {
             return res.status(400).json({ error: 'Please provide Project Name', 'success': false, message: 'Input error' });
         }
-        // const projectName = projectName;
-        // console.log(config.get('apiRequirementConfig'));
-
         if (!config.get('apiRequirementConfig')[REQUESTED_APP_NAME]) {
             return res.status(400).json({ error: 'projectName does not exist', 'success': false, message: 'Input error' });
         }
@@ -339,7 +337,7 @@ exports.loginUser = async (req, res) => {
             const providedPassword = userData['password'];
             if (storedData[0].blockTillLogInTimeStamp > DateTime.now()) {
                 console.log("User is blocked till", storedData[0].blockTillLogInTimeStamp);
-                return res.status(401).json({ message: 'User is blocked', 'success': false, message: 'Your account is blocked due to too many failed login attempts. Please wait and try again later. (' +  new Date(storedData[0].blockTillLogInTimeStamp).getMinutes() + ' Minutes )'});
+                return res.status(401).json({ message: 'User is blocked', 'success': false, message: 'Your account is blocked due to too many failed login attempts. Please wait and try again later. (' + new Date(storedData[0].blockTillLogInTimeStamp).getMinutes() + ' Minutes )' });
             }
             if (bcrypt.compareSync(providedPassword, storedHashedPassword)) {
                 console.log("Password is correct");
@@ -347,15 +345,15 @@ exports.loginUser = async (req, res) => {
                     userName: storedData[0].userName,
                     firstName: storedData[0].firstName,
                     lastName: storedData[0].lastName,
-                    image:null,
+                    image: null,
                     email: storedData[0].email,
                     phone: storedData[0].phone,
                     role: "user"
                 };
-                const tokens = generateTokens(payload, otherConfig[projectName]['tokenConfig']['secretKey'], otherConfig[projectName]['tokenConfig']['acess_expiration_delta'], otherConfig[projectName]['tokenConfig']['refresh_expiration_delta']);
+                const tokens = generateTokens(payload, config.get('apiRequirementConfig')[REQUESTED_APP_NAME]['AUTH_PROCESS']['tokenConfig']);
                 const message_info = {
                     "message": 'Login successful',
-                    "authProvider":"login-web",
+                    "authProvider": "login-web",
                     'success': true,
                     "login_info": {
                         userFullName: storedData[0].userName,
@@ -366,7 +364,7 @@ exports.loginUser = async (req, res) => {
                     },
                     "accessToken": tokens.access_token
                 };
-                logInfo({ ...message_info });
+                // logInfo({ ...message_info });
                 // Set access token in the response headers
                 res.setHeader('Authorization', `Bearer ${tokens.access_token}`);
                 // Set refresh token in a secure cookie
@@ -375,7 +373,7 @@ exports.loginUser = async (req, res) => {
                     tokens.refresh_token.toString(),
                     {
                         httpOnly: true,
-                        sameSite: "None",   
+                        sameSite: "None",
                         secure: true,
                         maxAge: 2 * 24 * 60 * 60 * 1000, // Set cookie expiration time (2 days)
                         path: '/' // Set a specific path for the refresh token cookie
@@ -406,6 +404,53 @@ exports.loginUser = async (req, res) => {
         return res.status(500).json(message_error);
     }
 }
+
+const createSession = async (req, res) => {
+    console.log("===CALLING CREATESESSION===");
+    
+    try {
+        var refresh_token = req.cookies['refresh_token']
+        // const projectName = req.projectName;
+        const REQUESTED_APP_NAME = req.REQUESTED_APP_NAME
+        console.log(config.get('apiRequirementConfig')[REQUESTED_APP_NAME]['AUTH_PROCESS']['tokenConfig']);
+        
+        const newAccessToken = getNewAccessToken(refresh_token, config.get('apiRequirementConfig')[REQUESTED_APP_NAME]['AUTH_PROCESS']['tokenConfig']);
+        // console.log(newAccessToken);
+        
+        if (newAccessToken) {
+          
+            var AUTH_INFO = req.AUTH_INFO;
+            const Login_info = {
+                "message": 'ReLogin successful',
+                'success': true,
+                "authProvider": "Relogin-web",
+                "login_info": {
+                    userFullName: AUTH_INFO.userName,
+                    email: AUTH_INFO.email,
+                    phone: AUTH_INFO.phone,
+                    image: AUTH_INFO.image,
+                    firstName: AUTH_INFO.firstName,
+                    lastName: AUTH_INFO.lastName
+                },
+                "accessToken": newAccessToken
+            };
+            return res.status(200).json(Login_info);
+        } else {
+            message_error = { message: 'Please provide valid refresh token', error: 'Please provide valid refresh token', 'success': false };
+            return res.status(400).json(message_error);
+        }
+    } catch (error) {
+        return res.status(400).json({ "message_info": error });
+    }
+}
+
+
+module.exports={
+    loginUser,
+    createSession
+}
+
+
 
 // exports.emailVerifyUser = async (req, res) => {
 //     try {
