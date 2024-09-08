@@ -3,76 +3,42 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const path = require('path');
 require('dotenv').config();
-// const MongoDBManager=require('./services/mongoService')
-//Configure All Ther Services and Manager
-// MongoDBManager.configure()
+const configLoader = require('./configLoader');
+// const detectBrowser = require('./middlewares/detectBrowser');
+const {identifyApplication}=require('./middlewares/identifyApplicationMiddlewares');
+// Initialize express app
+const app = express();
+const port = configLoader.get('serverConfig').PORT || 7000;
 
+// Define CORS options
 const corsOption = {
   origin: process.env.CORS_ORIGINS.split(','),
-  credentials: true
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-From']
 };
 
-const authRoutesV1 = require('./routes/v1/authRouter');
-const appRoutesV1 = require('./routes/v1/AppRouter');
-const app = express();
-const port = process.env.PORT || 7000;
+// Apply the detectBrowser middleware globally
+// app.use(detectBrowser);
+app.use(identifyApplication)
+
 // Use middleware
 app.use(cookieParser());
 app.use(cors(corsOption));
 app.use(express.json());
 app.use('/public', express.static(path.join(__dirname, 'public')));
 
-
 // Serve the main HTML file
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, './public/index.html'));
 });
 
-// Health check route
-// app.get('/v1/check', (req, res) => {
-//   const requestedDomain = req.hostname;
-//   res.cookie('callback-url', requestedDomain, {
-//     httpOnly: true,
-//     secure: process.env.NODE_ENV === 'production',
-//     maxAge: 2 * 24 * 60 * 60 * 1000, // 2 days
-//     path: '/'
-//   });
-//   res.cookie('projectName', 'projectOne', {
-//     httpOnly: true,
-//     secure: process.env.NODE_ENV === 'production',
-//     maxAge: 2 * 24 * 60 * 60 * 1000, // 2 days
-//     path: '/'
-//   });
-//   res.status(200).send('Application Is Healthy');
-// });
-// const apiKey = 'your-secret-api-key';
+// Import routes
+const authRoutesV1 = require('./routes/v1/authRouter');
+const appRoutesV1 = require('./routes/v1/AppRouter');
 
-// app.use((req, res, next) => {
-//     const key = req.headers['x-api-key'];
-
-//     if (key === apiKey) {
-//         next();
-//     } else {
-//         res.status(403).send('Forbidden');
-//     }
-// });
-
-
-// Route handling
-
-// app.use('/auth', AuthRoutes);
-
-
-// REGISTER ALL ROUTER PRESENT IN THIS APPLICATION
-app.use('/v1/app',appRoutesV1)
-app.use('/v1/auth',authRoutesV1)
-
-
-
-
-
-
-
+// Register routes
+app.use('/v1/app', appRoutesV1);
+app.use('/v1/auth', authRoutesV1);
 
 // Global error handler
 app.use((err, req, res, next) => {
