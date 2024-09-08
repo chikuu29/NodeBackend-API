@@ -11,6 +11,8 @@ const app = express();
 const port = configLoader.get('serverConfig').PORT || 7000;
 
 // Define CORS options
+console.log("ALLOW ORIGIN",process.env.CORS_ORIGINS);
+
 const corsOption = {
   origin: process.env.CORS_ORIGINS.split(','),
   credentials: true,
