@@ -11,21 +11,22 @@ const app = express();
 const port = configLoader.get('serverConfig').PORT || 7000;
 
 // Define CORS options
-console.log("ALLOW ORIGIN",process.env.CORS_ORIGINS);
+console.log("ALLOW ORIGIN",process.env.CORS_ORIGINS.split(','));
 
 const corsOption = {
-  origin: process.env.CORS_ORIGINS.split(','),
+  origin: ['https://myomspanel.onrender.com'],
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-From']
 };
 
 // Apply the detectBrowser middleware globally
 // app.use(detectBrowser);
-app.use(identifyApplication)
+
 
 // Use middleware
 app.use(cookieParser());
 app.use(cors(corsOption));
+app.use(identifyApplication)
 app.use(express.json());
 app.use('/public', express.static(path.join(__dirname, 'public')));
 
