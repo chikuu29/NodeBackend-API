@@ -289,7 +289,7 @@ const { DateTime } = require('luxon');
 const config = require('../../../configLoader');
 const { dataSanitizer } = require('../../../utils/dataSanitizerUtils')
 const { mongoClient } = require('../../../services/mongoService')
-const { generateTokens ,getNewAccessToken} = require('./authentication')
+const { generateTokens, getNewAccessToken } = require('./authentication')
 
 const loginUser = async (req, res) => {
     console.log("===CALLING LOGIN CONTROLLRS===");
@@ -407,18 +407,18 @@ const loginUser = async (req, res) => {
 
 const createSession = async (req, res) => {
     console.log("===CALLING CREATESESSION===");
-    
+
     try {
         var refresh_token = req.cookies['refresh_token']
         // const projectName = req.projectName;
         const REQUESTED_APP_NAME = req.REQUESTED_APP_NAME
         console.log(config.get('apiRequirementConfig')[REQUESTED_APP_NAME]['AUTH_PROCESS']['tokenConfig']);
-        
+
         const newAccessToken = getNewAccessToken(refresh_token, config.get('apiRequirementConfig')[REQUESTED_APP_NAME]['AUTH_PROCESS']['tokenConfig']);
         // console.log(newAccessToken);
-        
+
         if (newAccessToken) {
-          
+
             var AUTH_INFO = req.AUTH_INFO;
             const Login_info = {
                 "message": 'ReLogin successful',
@@ -444,10 +444,26 @@ const createSession = async (req, res) => {
     }
 }
 
+const logoutUser = async (req, res) => {
+    res.clearCookie('refresh_token', {
+        httpOnly: true,
+        sameSite: 'none',
+        httpOnly: true,
+        secure: true
+    });
+    const logoutRes = {
+        "success": true,
+        "message": "Logged out successfully",
+        "logoutTime": new Date().toISOString()
+    }
+    return res.status(200).json(logoutRes);
+}
 
-module.exports={
+
+module.exports = {
     loginUser,
-    createSession
+    createSession,
+    logoutUser
 }
 
 
