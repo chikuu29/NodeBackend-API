@@ -296,15 +296,15 @@ const loginUser = async (req, res) => {
 
     try {
         const requestData = req.body;
-        const REQUESTED_APP_NAME = req.REQUESTED_APP_NAME
+        const CLIENT_NAME = req.CLIENT_NAME
 
-        if (!requestData || !REQUESTED_APP_NAME) {
+        if (!requestData || !CLIENT_NAME) {
             return res.status(400).json({ error: 'Please provide Project Name', 'success': false, message: 'Input error' });
         }
-        if (!config.get('apiRequirementConfig')[REQUESTED_APP_NAME]) {
+        if (!config.get('apiRequirementConfig')[CLIENT_NAME]) {
             return res.status(400).json({ error: 'projectName does not exist', 'success': false, message: 'Input error' });
         }
-        const userFieldsConfig = config.get('apiRequirementConfig')[REQUESTED_APP_NAME]['loginFields'];
+        const userFieldsConfig = config.get('apiRequirementConfig')[CLIENT_NAME]['loginFields'];
         const userFields = Object.keys(userFieldsConfig);
 
         const userData = dataSanitizer(userFields, userFieldsConfig, req.body);
@@ -332,7 +332,6 @@ const loginUser = async (req, res) => {
         const storedData = await mongoClient.fetch('user', query, {});
         console.log("storedData", storedData);
         if (storedData.length > 0) {
-
             const storedHashedPassword = storedData[0].password;
             const providedPassword = userData['password'];
             if (storedData[0].blockTillLogInTimeStamp > DateTime.now()) {
@@ -350,13 +349,15 @@ const loginUser = async (req, res) => {
                     phone: storedData[0].phone,
                     role: "user"
                 };
-                const tokens = generateTokens(payload, config.get('apiRequirementConfig')[REQUESTED_APP_NAME]['AUTH_PROCESS']['tokenConfig']);
+                const tokens = generateTokens(payload, config.get('apiRequirementConfig')[CLIENT_NAME]['AUTH_PROCESS']['tokenConfig']);
                 const message_info = {
                     "message": 'Login successful',
                     "authProvider": "login-web",
                     'success': true,
                     "login_info": {
                         userFullName: storedData[0].userName,
+                        role:storedData[0].role,
+                        image: storedData[0].image,
                         email: storedData[0].email,
                         phone: storedData[0].phone,
                         firstName: storedData[0].firstName,
@@ -393,7 +394,6 @@ const loginUser = async (req, res) => {
                 logError({ ...message_error });
                 return res.status(401).json(message_error);
             }
-
         } else {
             return res.status(404).json({ error: 'User does not exist', 'success': false, message: 'User Not Found' });
         }
@@ -411,10 +411,10 @@ const createSession = async (req, res) => {
     try {
         var refresh_token = req.cookies['refresh_token']
         // const projectName = req.projectName;
-        const REQUESTED_APP_NAME = req.REQUESTED_APP_NAME
-        console.log(config.get('apiRequirementConfig')[REQUESTED_APP_NAME]['AUTH_PROCESS']['tokenConfig']);
+        const CLIENT_NAME = req.CLIENT_NAME
+        console.log(config.get('apiRequirementConfig')[CLIENT_NAME]['AUTH_PROCESS']['tokenConfig']);
 
-        const newAccessToken = getNewAccessToken(refresh_token, config.get('apiRequirementConfig')[REQUESTED_APP_NAME]['AUTH_PROCESS']['tokenConfig']);
+        const newAccessToken = getNewAccessToken(refresh_token, config.get('apiRequirementConfig')[CLIENT_NAME]['AUTH_PROCESS']['tokenConfig']);
         // console.log(newAccessToken);
 
         if (newAccessToken) {
@@ -426,6 +426,7 @@ const createSession = async (req, res) => {
                 "authProvider": "Relogin-web",
                 "login_info": {
                     userFullName: AUTH_INFO.userName,
+                    role:AUTH_INFO.role,
                     email: AUTH_INFO.email,
                     phone: AUTH_INFO.phone,
                     image: AUTH_INFO.image,

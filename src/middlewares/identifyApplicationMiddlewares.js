@@ -4,36 +4,12 @@ const {validateAccessToken}=require('../controllers/v1/auth/authentication')
 const checkSession = async (req, res, next) => {
     try {
         var refresh_token = req.cookies['refresh_token']
-        const REQUESTED_APP_NAME = req.REQUESTED_APP_NAME
+        const CLIENT_NAME = req.CLIENT_NAME
         if (!refresh_token) {
-            // const requestedDomain = req.hostname;
-            // res.cookie(
-            //     'callback-url',
-            //     requestedDomain.toString(),
-            //     {
-            //         sameSite: "None",
-            //         httpOnly: true,
-            //         secure: true,
-            //         maxAge: 2 * 24 * 60 * 60 * 1000, // Set cookie expiration time (2 days)
-            //         path: '/' // Set a specific path for the refresh token cookie
-            //     }
-            // );
-            // res.cookie(
-            //     'projectName',
-            //     "projectOne",
-            //     {
-            //         httpOnly: true,
-            //         sameSite: "None",
-            //         secure: true,
-            //         maxAge: 2 * 24 * 60 * 60 * 1000, // Set cookie expiration time (2 days)
-            //         path: '/' // Set a specific path for the refresh token cookie
-            //     }
-            // );
             return res.status(401).json({ success: false, message: "Login State Lost" });
         } else {
-
             // console.log("project Name", projectName);
-            const validateTokenInfo = validateAccessToken(refresh_token, config.get('apiRequirementConfig')[REQUESTED_APP_NAME]['AUTH_PROCESS']['tokenConfig']);
+            const validateTokenInfo = validateAccessToken(refresh_token, config.get('apiRequirementConfig')[CLIENT_NAME]['AUTH_PROCESS']['tokenConfig']);
             if (validateTokenInfo) {
                 req.AUTH_INFO = validateTokenInfo;
                 // req.projectName = projectName;
@@ -49,28 +25,28 @@ const checkSession = async (req, res, next) => {
     }
 }
 
-// const checkAccessTokenMiddleWare = async (req, res, next) => {
-//     try {
-//         const accessToken = req.headers.authorization.split('Bearer ').pop();
-//         if (!accessToken) {
-//             res.status(403).json({ success: false, message: "Forbidden" })
-//         }
-//         const projectName = req.cookies['projectName'] ? req.cookies['projectName'] : req.body.projectName;
-//         const tokenInfo = validateAccessToken(accessToken, otherConfig[projectName].tokenConfig.secretKey);
-//         if (tokenInfo) {
-//             req.tokenInfo = tokenInfo;
-//             return next();
-//         } else {
-//             message_error = { error: 'Invalid or expired access token', 'success': false, message: 'permission error' };
-//             logError({ ...message_error });
-//             return res.status(403).json(message_error);
-//         }
+const authenticate = async (req, res, next) => {
+    try {
+        const accessToken = req.headers.authorization.split('Bearer ').pop();
+        if (!accessToken) {
+            res.status(403).json({ success: false, message: "Forbidden" })
+        }
+        const CLIENT_NAME = req.CLIENT_NAME
+        const tokenInfo = validateAccessToken(accessToken, config.get('apiRequirementConfig')[CLIENT_NAME]['AUTH_PROCESS']['tokenConfig']);
+        if (tokenInfo) {
+            req.tokenInfo = tokenInfo;
+            return next();
+        } else {
+            message_error = { error: 'Invalid or expired access token', 'success': false, message: 'permission error' };
+            logError({ ...message_error });
+            return res.status(403).json(message_error);
+        }
 
 
-//     } catch (error) {
-//         return res.status(401).json({ success: false, message: "Unautorization" })
-//     }
-// }
+    } catch (error) {
+        return res.status(401).json({ success: false, message: "Unautorization" })
+    }
+}
 
 const identifyApplication = async (req, res, next) => {
     console.log("🚀 === Request received === 🚀");
@@ -79,14 +55,18 @@ const identifyApplication = async (req, res, next) => {
     // console.log("REQUEST FROM", req['headers']['x-requested-from']);
     // console.log("SERVER CONFIG", config.get('serverConfig'));
     try {
-        CONNECTION_ALLOW_APPLICATION = config.get('serverConfig')['CONNECTION_ALLOW_APPLICATION'] || []
-        console.log("CONNECTION_ALLOW_APPLICATION", CONNECTION_ALLOW_APPLICATION);
-        if (CONNECTION_ALLOW_APPLICATION.includes(req['headers']['x-requested-from'])) {
+        X_CLIENT_ID = config.get('serverConfig')['X_CLIENT_ID'] || []
+        console.log("X_CLIENT_ID", X_CLIENT_ID);
+        // console.log("X",req['headers']['x-client-id']);
+        console.log("req['headers']",req['headers']);
+        
+        
+        if (X_CLIENT_ID.includes(req['headers']['x-client-id'])) {
             // console.log("project Name", projectName);
             // const validateTokenInfo = validateAccessToken(refresh_token, otherConfig[projectName].tokenConfig.secretKey);
             // if (validateTokenInfo) {
             //     req.validateTokenInfo = validateTokenInfo;
-                req.REQUESTED_APP_NAME = req['headers']['x-requested-from'];
+                req.CLIENT_NAME = req['headers']['x-client-id'];
                 return next();
             // } else {
             //     return res.status(401).json({ success: false, message: "Login State Is Lost!" });
@@ -101,4 +81,4 @@ const identifyApplication = async (req, res, next) => {
 
 }
 
-module.exports = {identifyApplication,checkSession };
+module.exports = {identifyApplication,checkSession,authenticate };

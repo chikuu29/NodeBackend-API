@@ -5,7 +5,6 @@ const {checkSession} = require("../../middlewares/identifyApplicationMiddlewares
 const { loginUser, createSession,logoutUser } = require('../../controllers/v1/auth/userController');
 
 // const authenticationMiddleware = require('../../../middlewares/v1/authenticate');
-
 // router.post('/register', userController.registerUser);
 // router.get('/forGotPasswordOnUserId', customMiddleware, userController.forgotPasswordOnUserId);
 router.post('/login', loginUser);

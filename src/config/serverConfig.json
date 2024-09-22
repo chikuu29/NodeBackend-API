@@ -5,8 +5,9 @@
     "CRYPTO_ENCRIPTION_KEY":"QHlPYy2x4kPbWThoF63YXs9x345EmfgjQK7nsvfC2H0",
     "API_KEY":"KRISHNA_510",
     "LOCATION":"INDIA",
-    "CONNECTION_ALLOW_APPLICATION":[
+    "X_CLIENT_ID":[
         "LOCAL_BASELINE"
     ],
+    "ALLOW_HEADERS":["Content-Type", "Authorization", "X-Requested-From","X-Client-ID"],
     "MAIL_NOTIFIACTION":{}
 }

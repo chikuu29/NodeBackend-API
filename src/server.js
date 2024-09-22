@@ -12,11 +12,12 @@ const port = configLoader.get('serverConfig').PORT || 7000;
 
 // Define CORS options
 // console.log("ALLOW ORIGIN",process.env.CORS_ORIGINS.split(','));
+// console.log("hii",configLoader.get('serverConfig').ALLOW_HEADERS);
 
 const corsOption = {
   origin: ['https://myomspanel.onrender.com','http://localhost:5173/'],
   credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-From']
+  allowedHeaders: configLoader.get('serverConfig').ALLOW_HEADERS || ['Content-Type', 'Authorization']
 };
 
 // Apply the detectBrowser middleware globally
