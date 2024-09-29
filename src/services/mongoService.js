@@ -41,7 +41,7 @@ class MongoDBManager {
         // console.log("Fetch",db);
         // await this.init();
         // console.log(db);
-        
+
         const collection = db.collection(collectionName);
         return await collection.find(query).toArray();
     }
@@ -57,10 +57,10 @@ class MongoDBManager {
         return result.ops[0];
     }
 
-    async update(collectionName, id, data) {
+    async update(collectionName, match, data) {
         const collection = db.collection(collectionName);
         const result = await collection.updateOne(
-            { _id: new ObjectId(id) },
+            match,
             { $set: data }
         );
         return result.modifiedCount > 0;

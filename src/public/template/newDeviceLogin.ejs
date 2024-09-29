@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Device Login Detected</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .info {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">New Device Login Detected <i class="fas fa-user-lock"></i></h1>
+        <p>We have detected a new login from a device. Here are the details:</p>
+        <div class="info">
+            <strong><i class="fas fa-globe"></i> Browser:</strong> <%= browserDetails.browser %><br>
+            <strong><i class="fas fa-laptop"></i> Operating System:</strong> <%= os %><br>
+            <strong><i class="fas fa-info-circle"></i> Browser Version:</strong> <%= browserDetails.version %><br>
+            <strong><i class="fas fa-clock"></i> Date & Time:</strong> <%= new Date(dateTimeAt).toLocaleString() %><br>
+            <strong><i class="fas fa-address-card"></i> IP Address:</strong> <%= ip %><br>
+        </div>
+        <p>If this was not you, please secure your account.</p>
+        <div class="footer text-center">
+            <p>Thank you,<br>Your Security Team <i class="fas fa-shield-alt"></i></p>
+        </div>
+    </div>
+</body>
+</html>

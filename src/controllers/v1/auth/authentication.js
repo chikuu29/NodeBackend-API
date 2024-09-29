@@ -73,7 +73,7 @@ const jwt = require('jsonwebtoken');
 
 // Generate tokens
 const generateTokens = (payload,config) => {
-    console.log(config);
+    // console.log(config);
     
     const {secretKey,refresh_expiration_delta,acess_expiration_delta}=config
     const access_token_exp = Math.floor(Date.now() / 1000) + acess_expiration_delta;
@@ -92,9 +92,9 @@ const generateTokens = (payload,config) => {
         iat: Math.floor(Date.now() / 1000),
     };
     const refresh_token = jwt.sign(refresh_token_payload, secretKey);
-    console.log('refresh_token--->', refresh_token)
+    // console.log('refresh_token--->', refresh_token)
     const refresh_token_data = jwt.verify(refresh_token, secretKey);
-    console.log('refresh_token_data--', refresh_token_data);
+    // console.log('refresh_token_data--', refresh_token_data);
 
     return { access_token, refresh_token };
 };

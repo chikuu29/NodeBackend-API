@@ -1,13 +1,24 @@
 {
-    "VERSION":1,
-    "NAME":"BACKEND-SERVER",
-    "PORT":7000,
-    "CRYPTO_ENCRIPTION_KEY":"QHlPYy2x4kPbWThoF63YXs9x345EmfgjQK7nsvfC2H0",
-    "API_KEY":"KRISHNA_510",
-    "LOCATION":"INDIA",
-    "X_CLIENT_ID":[
+    "VERSION": 1,
+    "NAME": "BACKEND-SERVER",
+    "PORT": 7000,
+    "CRYPTO_ENCRIPTION_KEY": "QHlPYy2x4kPbWThoF63YXs9x345EmfgjQK7nsvfC2H0",
+    "API_KEY": "KRISHNA_510",
+    "LOCATION": "INDIA",
+    "X_CLIENT_ID": [
         "LOCAL_BASELINE"
     ],
-    "ALLOW_HEADERS":["Content-Type", "Authorization", "X-Requested-From","X-Client-ID"],
-    "MAIL_NOTIFIACTION":{}
+    "ALLOW_HEADERS": [
+        "Content-Type",
+        "Authorization",
+        "X-Requested-From",
+        "X-Client-ID"
+    ],
+    "SMTP_SERVER_DETAILS": {
+        "SERVER": "smtp.gmail.com",
+        "PORT": 587,
+        "MAIL_ID": "findcodeeasy@gmail.com",
+        "PASSWORD": "zqfl pxpm hacw akmr"
+    },
+    "MAIL_NOTIFIACTION": {}
 }

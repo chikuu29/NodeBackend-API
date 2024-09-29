@@ -2,6 +2,9 @@
 // const router = express.Router();
 const bcrypt = require('bcrypt');
 const { DateTime } = require('luxon');
+const { parseUserAgent } = require('../../../utils/useragentUtils')
+const { sendMail } = require('../../../services/emailService')
+const { renderTemplate } = require('../../../utils/templateUtils')
 // const { readServerConfigFiles } = require('../../../utils/fileUtils');
 // const MongoDBManager = require('../../../commonServices/mongoServices');
 // console.log('MongoDBManager :', MongoDBManager);
@@ -289,7 +292,8 @@ const { DateTime } = require('luxon');
 const config = require('../../../configLoader');
 const { dataSanitizer } = require('../../../utils/dataSanitizerUtils')
 const { mongoClient } = require('../../../services/mongoService')
-const { generateTokens, getNewAccessToken } = require('./authentication')
+const { generateTokens, getNewAccessToken } = require('./authentication');
+
 
 const loginUser = async (req, res) => {
     console.log("===CALLING LOGIN CONTROLLRS===");
@@ -330,7 +334,7 @@ const loginUser = async (req, res) => {
             ]
         }
         const storedData = await mongoClient.fetch('user', query, {});
-        console.log("storedData", storedData);
+        // console.log("storedData", storedData);
         if (storedData.length > 0) {
             const storedHashedPassword = storedData[0].password;
             const providedPassword = userData['password'];
@@ -339,7 +343,40 @@ const loginUser = async (req, res) => {
                 return res.status(401).json({ message: 'User is blocked', 'success': false, message: 'Your account is blocked due to too many failed login attempts. Please wait and try again later. (' + new Date(storedData[0].blockTillLogInTimeStamp).getMinutes() + ' Minutes )' });
             }
             if (bcrypt.compareSync(providedPassword, storedHashedPassword)) {
-                console.log("Password is correct");
+                // Get device information
+                // const userAgent = useragent.parse(req.headers['user-agent']);
+                // console.log("userAgent",req.headers['user-agent']);
+                // console.log(parseUserAgent(req.headers['user-agent']));
+                // const deviceInfo=parseUserAgent(req.headers['user-agent'])
+                const deviceInfo = {
+                    ...parseUserAgent(req.headers['user-agent']),
+                    ...{
+                        dateTimeAt: new Date().toISOString(), ip: req.ip
+                    }
+                };
+                // Ensure devices array exists
+                if (!storedData[0].devices) {
+                    storedData[0]['devices'] = [];
+                    // Initialize devices array if it doesn't exist
+                }
+                const knownDevice = storedData[0].devices.find(
+                    (device) => device.ip === deviceInfo.ip && device.browser === deviceInfo.browser
+                );
+                if (!knownDevice) {
+                    // New device detected, send notification
+                    // console.log(deviceInfo);
+                    const htmlContent = await renderTemplate('newDeviceLogin.ejs', deviceInfo);
+                    const mailOptions = {
+                        to: [storedData[0].email],
+                        subject: 'New Device Login Detected',
+                        html: htmlContent
+                    };
+                    sendMail(mailOptions)
+                    storedData[0].devices.push(deviceInfo)
+                    await mongoClient.update('user',{email:storedData[0].email},
+                        {devices:storedData[0].devices})
+
+                }
                 const payload = {
                     userName: storedData[0].userName,
                     firstName: storedData[0].firstName,
@@ -356,7 +393,7 @@ const loginUser = async (req, res) => {
                     'success': true,
                     "login_info": {
                         userFullName: storedData[0].userName,
-                        role:storedData[0].role,
+                        role: storedData[0].role,
                         image: storedData[0].image,
                         email: storedData[0].email,
                         phone: storedData[0].phone,
@@ -365,8 +402,6 @@ const loginUser = async (req, res) => {
                     },
                     "accessToken": tokens.access_token
                 };
-                // logInfo({ ...message_info });
-                // Set access token in the response headers
                 res.setHeader('Authorization', `Bearer ${tokens.access_token}`);
                 // Set refresh token in a secure cookie
                 res.cookie(
@@ -426,7 +461,7 @@ const createSession = async (req, res) => {
                 "authProvider": "Relogin-web",
                 "login_info": {
                     userFullName: AUTH_INFO.userName,
-                    role:AUTH_INFO.role,
+                    role: AUTH_INFO.role,
                     email: AUTH_INFO.email,
                     phone: AUTH_INFO.phone,
                     image: AUTH_INFO.image,
@@ -459,6 +494,7 @@ const logoutUser = async (req, res) => {
     }
     return res.status(200).json(logoutRes);
 }
+
 
 
 module.exports = {

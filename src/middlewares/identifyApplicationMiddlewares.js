@@ -56,9 +56,9 @@ const identifyApplication = async (req, res, next) => {
     // console.log("SERVER CONFIG", config.get('serverConfig'));
     try {
         X_CLIENT_ID = config.get('serverConfig')['X_CLIENT_ID'] || []
-        console.log("X_CLIENT_ID", X_CLIENT_ID);
-        // console.log("X",req['headers']['x-client-id']);
-        console.log("req['headers']",req['headers']);
+        // console.log("X_CLIENT_ID", X_CLIENT_ID);
+        // // console.log("X",req['headers']['x-client-id']);
+        // console.log("req['headers']",req['headers']);
         
         
         if (X_CLIENT_ID.includes(req['headers']['x-client-id'])) {
