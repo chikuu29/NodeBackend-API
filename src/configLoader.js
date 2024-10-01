@@ -8,7 +8,7 @@ class ConfigLoader {
 
     loadConfig(fileName) {
         const filePath = path.join(__dirname, 'config', fileName);
-        console.log("filePath",filePath);
+        // console.log("filePath",filePath);
         
         try {
             const data = readServerConfigFiles(filePath);

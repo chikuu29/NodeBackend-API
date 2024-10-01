@@ -321,8 +321,6 @@ const loginUser = async (req, res) => {
             logError({ ...message_error });
             return res.status(500).json(message_error);
         }
-
-        console.log("login dta", userData);
         const query = {
             $or: [
                 {
@@ -333,7 +331,7 @@ const loginUser = async (req, res) => {
                 }
             ]
         }
-        const storedData = await mongoClient.fetch('user', query, {});
+        const storedData = await mongoClient.find('user', query, {});
         // console.log("storedData", storedData);
         if (storedData.length > 0) {
             const storedHashedPassword = storedData[0].password;
@@ -344,10 +342,6 @@ const loginUser = async (req, res) => {
             }
             if (bcrypt.compareSync(providedPassword, storedHashedPassword)) {
                 // Get device information
-                // const userAgent = useragent.parse(req.headers['user-agent']);
-                // console.log("userAgent",req.headers['user-agent']);
-                // console.log(parseUserAgent(req.headers['user-agent']));
-                // const deviceInfo=parseUserAgent(req.headers['user-agent'])
                 const deviceInfo = {
                     ...parseUserAgent(req.headers['user-agent']),
                     ...{
@@ -357,7 +351,7 @@ const loginUser = async (req, res) => {
                 // Ensure devices array exists
                 if (!storedData[0].devices) {
                     storedData[0]['devices'] = [];
-                    // Initialize devices array if it doesn't exist
+    
                 }
                 const knownDevice = storedData[0].devices.find(
                     (device) => device.ip === deviceInfo.ip && device.browser === deviceInfo.browser

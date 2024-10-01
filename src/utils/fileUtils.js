@@ -10,7 +10,7 @@ const key = 'QHlPYy2x4kPbWThoF63YXs9x345EmfgjQK7nsvfC2H0=';
  * @returns {Object} - The parsed JSON object. Returns an empty object if there is an error.
  */
 const readServerConfigFiles = (filePath, readEncryptFile = false) => {
-  console.log("===CALLING readServerConfigFiles ===",readEncryptFile);
+  // console.log("===CALLING readServerConfigFiles ===",readEncryptFile);
   try {
     if (readEncryptFile) {
       return decryptJsonFile(filePath + '.enc');

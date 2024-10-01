@@ -1,11 +1,21 @@
 const { MongoClient, ObjectId } = require("mongodb");
-const commonOperation = require('../commonServices/commonOperation'); // Ensure this is correctly required
+// const commonOperation = require('../commonServices/commonOperation');
 
-const mongoConfig = commonOperation.readJsonFiles('./src/config/mongoConfig.json');
-const MONGO_CONNECTION_CONFIG = mongoConfig;
+const configLoader = require('../configLoader');
+
+// const mongoConfig = commonOperation.readJsonFiles('./src/config/mongoConfig.json');
+const MONGO_CONNECTION_CONFIG = configLoader.get('databaseConfig');
+
+let dbClient;
 
 const connect = async () => {
+    if (dbClient && dbClient.isConnected()) {
+        console.log("✅ Using existing MongoDB connection.");
+        return dbClient.db(); // Reuse the existing connection
+    }
+
     console.log("🔍 TRYING TO ESTABLISH MONGO CONNECTION");
+
     try {
         let url;
         if (MONGO_CONNECTION_CONFIG.DB_CONNECTION_TYPE === "ATLAS") {
@@ -15,67 +25,68 @@ const connect = async () => {
             const CONNECTION_DETAILS = MONGO_CONNECTION_CONFIG.auth;
             url = `mongodb://${CONNECTION_DETAILS.user}:${CONNECTION_DETAILS.password}@${CONNECTION_DETAILS.host}:${CONNECTION_DETAILS.port}/?authSource=${CONNECTION_DETAILS.databaseName}&authMechanism=${CONNECTION_DETAILS.authMechanism}`;
         }
-        // console.log("🔗 CONNECTION STRING:", url);s
-        const client = new MongoClient(url);
-        await client.connect();
+
+        dbClient = new MongoClient(url); // Use unified topology for better handling of replica sets and sharding.
+        await dbClient.connect();
         console.log("===🎉🎉 CONNECTED TO MONGO DB 🎉🎉===");
-        return client.db(); // Store the database instance
+
+        return dbClient.db();
     } catch (error) {
         console.error("❌ MONGO CONNECTION FAILED", error);
-        throw error; // Rethrow to handle connection issues
+        throw error;
     }
 };
 
-let db;
-(async () => {
-    db = await connect(MONGO_CONNECTION_CONFIG);
-})();
-
 class MongoDBManager {
     constructor() {
-        db = null;
+        this.db = null;
     }
 
+    async init() {
+        if (!this.db) {
+            this.db = await connect();
+        }
+    }
 
-    async fetch(collectionName, query = {}, { }) {
-        // console.log("Fetch",db);
-        // await this.init();
-        // console.log(db);
-
-        const collection = db.collection(collectionName);
+    async find(collectionName, query = {}) {
+        await this.init();
+        const collection = this.db.collection(collectionName);
         return await collection.find(query).toArray();
     }
 
     async fetchById(collectionName, id) {
-        const collection = db.collection(collectionName);
+        await this.init();
+        const collection = this.db.collection(collectionName);
         return await collection.findOne({ _id: new ObjectId(id) });
     }
 
     async insert(collectionName, data) {
-        const collection = db.collection(collectionName);
+        await this.init();
+        const collection = this.db.collection(collectionName);
         const result = await collection.insertOne(data);
         return result.ops[0];
     }
 
     async update(collectionName, match, data) {
-        const collection = db.collection(collectionName);
-        const result = await collection.updateOne(
-            match,
-            { $set: data }
-        );
+        await this.init();
+        const collection = this.db.collection(collectionName);
+        const result = await collection.updateOne(match, { $set: data });
         return result.modifiedCount > 0;
     }
 
     async delete(collectionName, id) {
-        const collection = db.collection(collectionName);
+        await this.init();
+        const collection = this.db.collection(collectionName);
         const result = await collection.deleteOne({ _id: new ObjectId(id) });
         return result.deletedCount > 0;
     }
-}
 
+    async getStatistics(scale=1){
+        await this.init();
+        return this.db.stats(scale)
+    }
+}
 
 module.exports = {
     mongoClient: new MongoDBManager()
-}
-
-
+};
