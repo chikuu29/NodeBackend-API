@@ -5,6 +5,10 @@ const { DateTime } = require('luxon');
 const { parseUserAgent } = require('../../../utils/useragentUtils')
 const { sendMail } = require('../../../services/emailService')
 const { renderTemplate } = require('../../../utils/templateUtils')
+// const {}=require('../../../utils/loggerUtils')
+
+const {createLogger}=require('../../../utils/loggerUtils')
+
 // const { readServerConfigFiles } = require('../../../utils/fileUtils');
 // const MongoDBManager = require('../../../commonServices/mongoServices');
 // console.log('MongoDBManager :', MongoDBManager);
@@ -293,6 +297,8 @@ const config = require('../../../configLoader');
 const { dataSanitizer } = require('../../../utils/dataSanitizerUtils')
 const { mongoClient } = require('../../../services/mongoService')
 const { generateTokens, getNewAccessToken } = require('./authentication');
+const { required } = require('joi');
+// const { createLogger } = require('winston');
 
 
 const loginUser = async (req, res) => {
@@ -308,6 +314,7 @@ const loginUser = async (req, res) => {
         if (!config.get('apiRequirementConfig')[CLIENT_NAME]) {
             return res.status(400).json({ error: 'projectName does not exist', 'success': false, message: 'Input error' });
         }
+         
         const userFieldsConfig = config.get('apiRequirementConfig')[CLIENT_NAME]['loginFields'];
         const userFields = Object.keys(userFieldsConfig);
 
@@ -409,18 +416,22 @@ const loginUser = async (req, res) => {
                         path: '/' // Set a specific path for the refresh token cookie
                     }
                 );
+                // res.redirect(`${"http://localhost:5173/callback"}?code=${"ok"}`);
+            
                 return res.status(200).json(message_info);
             } else {
                 // Handle incorrect password case
-                if (storedData[0].numOfLoginFailAttempt >= otherConfig[projectName]['verifyUser']['numOfLoginFailAttempt']) {
-                    const updateDataTemp = { blockTillLogInTimeStamp: DateTime.now().plus({ minutes: otherConfig[projectName]['verifyUser']['blockedTillEmailMinutes'] }) };
-                    await mongoDBManagerObj.updateDocument(mongoConfig[projectName]['userCol'], { '_id': storedData[0]['_id'] }, { '$set': updateDataTemp });
-                }
-                const numOfLoginFailAttempt = { numOfLoginFailAttempt: storedData[0].numOfLoginFailAttempt + 1 };
-                await mongoDBManagerObj.updateDocument(mongoConfig[projectName]['userCol'], { '_id': storedData[0]['_id'] }, { '$set': numOfLoginFailAttempt });
-                console.log("Incorrect password");
+                // if (storedData[0].numOfLoginFailAttempt >= otherConfig[projectName]['verifyUser']['numOfLoginFailAttempt']) {
+                //     const updateDataTemp = { blockTillLogInTimeStamp: DateTime.now().plus({ minutes: otherConfig[projectName]['verifyUser']['blockedTillEmailMinutes'] }) };
+                //     await mongoDBManagerObj.updateDocument(mongoConfig[projectName]['userCol'], { '_id': storedData[0]['_id'] }, { '$set': updateDataTemp });
+                // }
+                // const numOfLoginFailAttempt = { numOfLoginFailAttempt: storedData[0].numOfLoginFailAttempt + 1 };
+                // await mongoDBManagerObj.updateDocument(mongoConfig[projectName]['userCol'], { '_id': storedData[0]['_id'] }, { '$set': numOfLoginFailAttempt });
+                // console.log("Incorrect password");
                 let message_error = { message: 'Incorrect password', 'success': false, error: 'Incorrect password' };
-                logError({ ...message_error });
+                // ok=createLogger(CLIENT_NAME)
+                createLogger(CLIENT_NAME).info(JSON.stringify(message_error))
+                // logError({ ...message_error });
                 return res.status(401).json(message_error);
             }
         } else {

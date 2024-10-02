@@ -25,7 +25,8 @@ const connect = async () => {
             const CONNECTION_DETAILS = MONGO_CONNECTION_CONFIG.auth;
             url = `mongodb://${CONNECTION_DETAILS.user}:${CONNECTION_DETAILS.password}@${CONNECTION_DETAILS.host}:${CONNECTION_DETAILS.port}/?authSource=${CONNECTION_DETAILS.databaseName}&authMechanism=${CONNECTION_DETAILS.authMechanism}`;
         }
-
+        // console.log(url);
+        
         dbClient = new MongoClient(url); // Use unified topology for better handling of replica sets and sharding.
         await dbClient.connect();
         console.log("===🎉🎉 CONNECTED TO MONGO DB 🎉🎉===");

@@ -6,6 +6,7 @@ require('dotenv').config();
 const configLoader = require('./configLoader');
 // const detectBrowser = require('./middlewares/detectBrowser');
 const {identifyApplication}=require('./middlewares/identifyApplicationMiddlewares');
+const loggerMiddleware = require('./middlewares/loggerMiddleware');
 // Initialize express app
 const app = express();
 const port = configLoader.get('serverConfig').PORT || 7000;
@@ -25,6 +26,8 @@ const corsOption = {
 
 
 // Use middleware
+// Use the logger middleware for all incoming requests
+app.use(loggerMiddleware);
 app.use(cookieParser());
 app.use(cors(corsOption));
 app.use(identifyApplication)

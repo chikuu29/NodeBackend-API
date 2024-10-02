@@ -1,3 +1,0 @@
-{"level":"error","message":"Error in registering user: ReferenceError: send_otp_email is not defined"}
-{"level":"error","message":"Error in registering user: TypeError: mongoDBManagerObj.insert_document is not a function"}
-{"level":"error","message":"Error in registering user: TypeError: message_info is not a constructor"}
