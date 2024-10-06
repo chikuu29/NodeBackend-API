@@ -1,0 +1,12 @@
+2. Build and Run the Docker Container
+After setting up the Dockerfile, run the following commands to build and run the Docker container:
+
+bash
+Copy code
+# Build the Docker image
+docker build -t node_server .
+
+# Run the Docker container
+docker run -p 7000:7000 node_server
+
+docker run -d -p 700:7000 node_server
