@@ -39,6 +39,15 @@ const generateConfig = async (req, res) => {
 
 }
 
+const getNotifiction = async (req, res) => {
+    return res.status(200).json({
+        "success": true,
+        "results": [
+            { id: 1, info: "You have a new message", aName: "Alice" },
+            { id: 2, info: "Class starts at 6 PM", aName: "Gym" },
+        ]
+    })
+}
 
 const getDataBaseStatisics = async (req, res) => {
     try {
@@ -67,5 +76,6 @@ const getDataBaseStatisics = async (req, res) => {
 
 module.exports = {
     generateConfig,
+    getNotifiction,
     getDataBaseStatisics
 }

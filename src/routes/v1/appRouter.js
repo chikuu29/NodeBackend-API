@@ -5,6 +5,7 @@ const { authenticate } = require('../../middlewares/identifyApplicationMiddlewar
 
 
 router.get('/app-configuration',authenticate, appController.generateConfig)
+router.get('/getNotification',authenticate,appController.getNotifiction)
 router.get('/getDataBaseStatisics',authenticate,appController.getDataBaseStatisics)
 
 
