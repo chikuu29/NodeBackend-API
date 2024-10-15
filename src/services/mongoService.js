@@ -55,6 +55,13 @@ class MongoDBManager {
         return await collection.find(query).toArray();
     }
 
+    async findOne(collectionName, query = {},projection={}) {
+        await this.init();
+     
+        const collection = this.db.collection(collectionName);
+        return await collection.findOne(query,{ projection: projection});
+    }
+
     async fetchById(collectionName, id) {
         await this.init();
         const collection = this.db.collection(collectionName);
@@ -65,7 +72,7 @@ class MongoDBManager {
         await this.init();
         const collection = this.db.collection(collectionName);
         const result = await collection.insertOne(data);
-        return result.ops[0];
+        return result;
     }
 
     async update(collectionName, match, data) {

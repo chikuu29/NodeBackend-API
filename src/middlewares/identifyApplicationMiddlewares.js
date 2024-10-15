@@ -52,7 +52,7 @@ const identifyApplication = async (req, res, next) => {
     console.log("🚀 === Request received === 🚀");
     // Add more detailed logging if needed
     console.log(`Method: ${req.method}, URL: ${req.url}`);
-    if(req.url=="/" || req.url.includes('public'))return next()
+    if(req.url=="/" || req.url.includes('public') || req.url.includes('google'))return next()
     // console.log("REQUEST FROM", req['headers']['x-requested-from']);
     // console.log("SERVER CONFIG", config.get('serverConfig'));
     try {

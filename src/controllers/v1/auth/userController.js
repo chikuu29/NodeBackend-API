@@ -7,7 +7,7 @@ const { sendMail } = require('../../../services/emailService')
 const { renderTemplate } = require('../../../utils/templateUtils')
 // const {}=require('../../../utils/loggerUtils')
 
-const {createLogger}=require('../../../utils/loggerUtils')
+const { createLogger } = require('../../../utils/loggerUtils')
 
 // const { readServerConfigFiles } = require('../../../utils/fileUtils');
 // const MongoDBManager = require('../../../commonServices/mongoServices');
@@ -314,7 +314,7 @@ const loginUser = async (req, res) => {
         if (!config.get('apiRequirementConfig')[CLIENT_NAME]) {
             return res.status(400).json({ error: 'projectName does not exist', 'success': false, message: 'Input error' });
         }
-         
+
         const userFieldsConfig = config.get('apiRequirementConfig')[CLIENT_NAME]['loginFields'];
         const userFields = Object.keys(userFieldsConfig);
 
@@ -358,7 +358,7 @@ const loginUser = async (req, res) => {
                 // Ensure devices array exists
                 if (!storedData[0].devices) {
                     storedData[0]['devices'] = [];
-    
+
                 }
                 const knownDevice = storedData[0].devices.find(
                     (device) => device.ip === deviceInfo.ip && device.browser === deviceInfo.browser
@@ -374,8 +374,8 @@ const loginUser = async (req, res) => {
                     };
                     sendMail(mailOptions)
                     storedData[0].devices.push(deviceInfo)
-                    await mongoClient.update('user',{email:storedData[0].email},
-                        {devices:storedData[0].devices})
+                    await mongoClient.update('user', { email: storedData[0].email },
+                        { devices: storedData[0].devices })
 
                 }
                 const payload = {
@@ -417,7 +417,7 @@ const loginUser = async (req, res) => {
                     }
                 );
                 // res.redirect(`${"http://localhost:5173/callback"}?code=${"ok"}`);
-            
+
                 return res.status(200).json(message_info);
             } else {
                 // Handle incorrect password case
@@ -501,11 +501,165 @@ const logoutUser = async (req, res) => {
 }
 
 
+const googleLogin = async (req, res) => {
+
+    try {
+
+
+        const oauthData = req.user['_json'];
+        console.log(req.user);
+        const query = {
+            email: oauthData['email']
+        }
+
+        const storedData = await mongoClient.findOne('user', query, { _id: 1, email: 1, oauth: 1 });
+        let OAuthData = {
+            oauth: {
+                "GoogleOauth": { ...oauthData, ...{ dateTimeAt: new Date().toISOString() } }
+            },
+
+        }
+        if (storedData) {
+            if (oauthData.email_verified) {
+                await mongoClient.update('user', { email: storedData.email }, OAuthData)
+                // const userInfo = {
+                //     registerMode: 'OAUTH',
+                //     role: 'user',
+                //     image: oauthData.picture,
+                //     userName: oauthData.name,
+                //     email: oauthData.email,
+                //     phone: null,
+                //     firstName: oauthData.given_name,
+                //     lastName: oauthData.family_name,
+                //     address: null,
+                //     ...OAuthData
+                // }
+                // console.log("UserInfor", userInfo);
+                // await mongoClient.insert('user', userInfo)
+                const payload = {
+                    authProvider: req.user.provider.toUpperCase() + "_OAUTH_MODE",
+                    userName: storedData.name,
+                    firstName: storedData.given_name,
+                    lastName: storedData.family_name,
+                    image: oauthData.picture,
+                    email: oauthData.email,
+                    phone: oauthData.phone || storedData.phone,
+                    role: "user"
+                };
+                const tokens = generateTokens(payload, config.get('apiRequirementConfig')["LOCAL_BASELINE"]['AUTH_PROCESS']['tokenConfig']);
+                const message_info = {
+                    "message": 'Login successful',
+                    "authProvider": req.user.provider.toUpperCase() + "_OAUTH_MODE",
+                    'success': true,
+                    "login_info": {
+                        userFullName: oauthData.name,
+                        role: oauthData.role,
+                        image: oauthData.picture,
+                        email: oauthData.email,
+                        phone: oauthData.phone,
+                        firstName: oauthData.given_name,
+                        lastName: oauthData.family_name,
+                    },
+                    "accessToken": tokens.access_token
+                };
+                // res.setHeader('Authorization', `Bearer ${tokens.access_token}`);
+                // Set refresh token in a secure cookie
+                res.cookie(
+                    'refresh_token',
+                    tokens.refresh_token.toString(),
+                    {
+                        httpOnly: true,
+                        sameSite: "None",
+                        secure: true,
+                        maxAge: 2 * 24 * 60 * 60 * 1000, // Set cookie expiration time (2 days)
+                        path: '/' // Set a specific path for the refresh token cookie
+                    }
+                );
+                // Prepare URL with only accessToken and refreshToken
+                const redirectUrl = `http://localhost:5173/auth/callback?` +
+                    `accessToken=${encodeURIComponent(tokens.access_token)}` +
+                    `&refreshToken=${encodeURIComponent(tokens.refresh_token)}`; // If needed, but already in cookie
+
+                res.redirect(redirectUrl);
+            }
+        } else {
+
+            if (oauthData.email_verified) {
+                const userInfo = {
+                    registerMode: 'OAUTH',
+                    role: 'user',
+                    image: oauthData.picture,
+                    userName: oauthData.name,
+                    email: oauthData.email,
+                    phone: null,
+                    firstName: oauthData.given_name,
+                    lastName: oauthData.family_name,
+                    address: null,
+                    ...OAuthData
+                }
+
+                console.log("UserInfor", userInfo);
+                await mongoClient.insert('user', userInfo)
+                const payload = {
+                    authProvider: req.user.provider.toUpperCase() + "_OAUTH_MODE",
+                    userName: oauthData.name,
+                    firstName: oauthData.given_name,
+                    lastName: oauthData.family_name,
+                    image: oauthData.picture,
+                    email: authData.email,
+                    phone: authData.phone || storedData.phone,
+                    role: "user"
+                };
+                const tokens = generateTokens(payload, config.get('apiRequirementConfig')["LOCAL_BASELINE"]['AUTH_PROCESS']['tokenConfig']);
+                const message_info = {
+                    "message": 'Login successful',
+                    "authProvider": req.user.provider.toUpperCase() + "_OAUTH_MODE",
+                    'success': true,
+                    "login_info": {
+                        userFullName: oauthData.name,
+                        role: oauthData.role,
+                        image: oauthData.picture,
+                        email: oauthData.email,
+                        phone: oauthData.phone,
+                        firstName: oauthData.given_name,
+                        lastName: oauthData.family_name,
+                    },
+                    "accessToken": tokens.access_token
+                };
+                res.setHeader('Authorization', `Bearer ${tokens.access_token}`);
+                // Set refresh token in a secure cookie
+                res.cookie(
+                    'refresh_token',
+                    tokens.refresh_token.toString(),
+                    {
+                        httpOnly: true,
+                        sameSite: "None",
+                        secure: true,
+                        maxAge: 2 * 24 * 60 * 60 * 1000, // Set cookie expiration time (2 days)
+                        path: '/' // Set a specific path for the refresh token cookie
+                    }
+                );
+                res.redirect(`http://localhost:5173/myApps`);
+            }
+            console.log("User Not FOund");
+        }
+        // console.log("storeDaata", storedData);
+
+
+    } catch (error) {
+        console.log("error", error);
+
+    }
+
+}
+
+
 
 module.exports = {
     loginUser,
     createSession,
-    logoutUser
+    logoutUser,
+    googleLogin
 }
 
 

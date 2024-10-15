@@ -3,6 +3,7 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const path = require('path');
 require('dotenv').config();
+
 const configLoader = require('./configLoader');
 // const detectBrowser = require('./middlewares/detectBrowser');
 const {identifyApplication}=require('./middlewares/identifyApplicationMiddlewares');
@@ -27,6 +28,9 @@ const corsOption = {
 
 // Use middleware
 // Use the logger middleware for all incoming requests
+// app.use(passport.session());
+
+
 app.use(loggerMiddleware);
 app.use(cookieParser());
 app.use(cors(corsOption));
