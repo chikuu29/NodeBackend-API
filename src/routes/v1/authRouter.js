@@ -16,7 +16,7 @@ passport.use(
         {
             clientID: configLoader.get('serverConfig')['OAUTH_LOGIN_SYSTEM']['GOOGLE_AUTH_CREDENTIALS']['client_id'],
             clientSecret: configLoader.get('serverConfig')['OAUTH_LOGIN_SYSTEM']['GOOGLE_AUTH_CREDENTIALS']['client_secret'],
-            callbackURL: '/v1/auth/google/callback',
+            callbackURL: 'https://nodebackend-api-1.onrender.com/v1/auth/google/callback',
         },
         (accessToken, refreshToken, profile, done) => {
             // You can customize how user information from Google is handled here
