@@ -504,7 +504,6 @@ const logoutUser = async (req, res) => {
 
 
 const googleLogin = async (req, res) => {
-
     try {
         const state = req.query.state ? JSON.parse(req.query.state) : {};
         const redirectTo = state.redirectTo || '/';
@@ -616,7 +615,7 @@ const googleLogin = async (req, res) => {
                 // res.redirect("https://myomspanel.onrender.com/myApps");
                 res.redirect(redirectTo)
             }
-            console.log("User Not FOund");
+        
         }
         // console.log("storeDaata", storedData);
     } catch (error) {

@@ -8,7 +8,7 @@ const { googleLogin } = require('../../controllers/v1/auth/userController');
 // Google OAuth Strategy setup
 const callbackURL = process.env.NODE_ENV === 'production'
     ? 'https://myomspanel.onrender.com/api/v1/oauth/google/callback'  // Production URL
-    : '/v1/oauth/google/callback';  // Development URL
+    : 'http://localhost:5173/api/v1/oauth/google/callback';  // Development URL
 
 passport.use(
     new GoogleStrategy(
