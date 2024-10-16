@@ -642,7 +642,7 @@ const googleLogin = async (req, res) => {
                         path: '/' // Set a specific path for the refresh token cookie
                     }
                 );
-                res.redirect(`http://localhost:5173/myApps`);
+                res.redirect("https://myomspanel.onrender.com/myApps");
             }
             console.log("User Not FOund");
         }
