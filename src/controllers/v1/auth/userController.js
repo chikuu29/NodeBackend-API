@@ -573,7 +573,7 @@ const googleLogin = async (req, res) => {
                     tokens.refresh_token.toString(),
                     {
                         httpOnly: true,
-                        sameSite: "None",
+                        sameSite: "Lax",
                         secure: true,
                         maxAge: 2 * 24 * 60 * 60 * 1000, // Set cookie expiration time (2 days)
                         path: '/' // Set a specific path for the refresh token cookie
@@ -637,7 +637,7 @@ const googleLogin = async (req, res) => {
                     tokens.refresh_token.toString(),
                     {
                         httpOnly: true,
-                        sameSite: "None",
+                        sameSite: "Lax",
                         secure: true,
                         maxAge: 2 * 24 * 60 * 60 * 1000, // Set cookie expiration time (2 days)
                         path: '/' // Set a specific path for the refresh token cookie
