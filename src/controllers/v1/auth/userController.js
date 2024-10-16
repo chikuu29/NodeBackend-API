@@ -609,8 +609,8 @@ const googleLogin = async (req, res) => {
                     firstName: oauthData.given_name,
                     lastName: oauthData.family_name,
                     image: oauthData.picture,
-                    email: authData.email,
-                    phone: authData.phone || storedData.phone,
+                    email: oauthData.email,
+                    phone: oauthData.phone || null,
                     role: "user"
                 };
                 const tokens = generateTokens(payload, config.get('apiRequirementConfig')["LOCAL_BASELINE"]['AUTH_PROCESS']['tokenConfig']);
