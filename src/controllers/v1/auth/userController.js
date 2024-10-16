@@ -583,7 +583,7 @@ const googleLogin = async (req, res) => {
                     `accessToken=${encodeURIComponent(tokens.access_token)}` +
                     `&refreshToken=${encodeURIComponent(tokens.refresh_token)}`; // If needed, but already in cookie
 
-                res.redirect("http://localhost:5173/");
+                res.redirect("https://myomspanel.onrender.com/myApps");
             }
         } else {
 
