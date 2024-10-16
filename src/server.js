@@ -44,12 +44,14 @@ app.get('/', (req, res) => {
 });
 
 // Import routes
+const oauthRoutesV1 = require('./routes/v1/oauthRouter');
 const authRoutesV1 = require('./routes/v1/authRouter');
 const appRoutesV1 = require('./routes/v1/appRouter');
 
 // Register routes
 app.use('/v1/app', appRoutesV1);
 app.use('/v1/auth', authRoutesV1);
+app.use('/v1/oauth',oauthRoutesV1)
 
 // Global error handler
 app.use((err, req, res, next) => {

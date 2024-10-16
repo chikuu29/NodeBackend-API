@@ -379,7 +379,7 @@ const loginUser = async (req, res) => {
 
                 }
                 const payload = {
-                    authProvider:"MANUAL_LOGIN_MODE",
+                    authProvider: "MANUAL_LOGIN_MODE",
                     userName: storedData[0].userName,
                     firstName: storedData[0].firstName,
                     lastName: storedData[0].lastName,
@@ -410,7 +410,7 @@ const loginUser = async (req, res) => {
                     'refresh_token',
                     tokens.refresh_token.toString(),
                     {
-                        path: '/', 
+                        path: '/',
                         httpOnly: true,
                         sameSite: "Lax",
                         secure: true,
@@ -506,14 +506,12 @@ const logoutUser = async (req, res) => {
 const googleLogin = async (req, res) => {
 
     try {
-
-
+        const state = req.query.state ? JSON.parse(req.query.state) : {};
+        const redirectTo = state.redirectTo || '/';
         const oauthData = req.user['_json'];
-        console.log(req.user);
         const query = {
             email: oauthData['email']
         }
-
         const storedData = await mongoClient.findOne('user', query, { _id: 1, email: 1, oauth: 1, });
         let OAuthData = {
             oauth: {
@@ -523,23 +521,10 @@ const googleLogin = async (req, res) => {
         }
         if (storedData) {
             if (oauthData.email_verified) {
+
+                OAuthData['image'] = oauthData.picture
                 await mongoClient.update('user', { email: storedData.email }, OAuthData)
-                // const userInfo = {
-                //     registerMode: 'OAUTH',
-                //     role: 'user',
-                //     image: oauthData.picture,
-                //     userName: oauthData.name,
-                //     email: oauthData.email,
-                //     phone: null,
-                //     firstName: oauthData.given_name,
-                //     lastName: oauthData.family_name,
-                //     address: null,
-                //     ...OAuthData
-                // }
-                // console.log("UserInfor", userInfo);
-                // await mongoClient.insert('user', userInfo)
                 console.log(storedData);
-                
                 const payload = {
                     authProvider: req.user.provider.toUpperCase() + "_OAUTH_MODE",
                     userName: oauthData.name,
@@ -551,23 +536,7 @@ const googleLogin = async (req, res) => {
                     role: "user"
                 };
                 const tokens = generateTokens(payload, config.get('apiRequirementConfig')["LOCAL_BASELINE"]['AUTH_PROCESS']['tokenConfig']);
-                // const message_info = {
-                //     "message": 'Login successful',
-                //     "authProvider": req.user.provider.toUpperCase() + "_OAUTH_MODE",
-                //     'success': true,
-                //     "login_info": {
-                //         userFullName: oauthData.name,
-                //         role: oauthData.role,
-                //         image: oauthData.picture,
-                //         email: oauthData.email,
-                //         phone: oauthData.phone,
-                //         firstName: oauthData.given_name,
-                //         lastName: oauthData.family_name,
-                //     },
-                //     "accessToken": tokens.access_token
-                // };
-                // res.setHeader('Authorization', `Bearer ${tokens.access_token}`);
-                // Set refresh token in a secure cookie
+
                 res.cookie(
                     'refresh_token',
                     tokens.refresh_token.toString(),
@@ -580,14 +549,15 @@ const googleLogin = async (req, res) => {
                     }
                 );
                 // Prepare URL with only accessToken and refreshToken
-                const redirectUrl = `http://localhost:5173/auth/callback?` +
-                    `accessToken=${encodeURIComponent(tokens.access_token)}` +
-                    `&refreshToken=${encodeURIComponent(tokens.refresh_token)}`; // If needed, but already in cookie
+                // const redirectUrl = `http://localhost:5173/auth/callback?` +
+                //     `accessToken=${encodeURIComponent(tokens.access_token)}` +
+                //     `&refreshToken=${encodeURIComponent(tokens.refresh_token)}`; // If needed, but already in cookie
 
-                res.redirect("https://myomspanel.onrender.com/myApps");
+                // res.redirect("https://myomspanel.onrender.com/myApps");
+                // res.redirect('http://localhost:5173/myApps')
+                res.redirect(redirectTo)
             }
         } else {
-
             if (oauthData.email_verified) {
                 const userInfo = {
                     registerMode: 'OAUTH',
@@ -643,13 +613,12 @@ const googleLogin = async (req, res) => {
                         path: '/' // Set a specific path for the refresh token cookie
                     }
                 );
-                res.redirect("https://myomspanel.onrender.com/myApps");
+                // res.redirect("https://myomspanel.onrender.com/myApps");
+                res.redirect(redirectTo)
             }
             console.log("User Not FOund");
         }
         // console.log("storeDaata", storedData);
-
-
     } catch (error) {
         console.log("error", error);
 
