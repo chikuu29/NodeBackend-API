@@ -410,6 +410,8 @@ const loginUser = async (req, res) => {
                     'refresh_token',
                     tokens.refresh_token.toString(),
                     {
+                        domain: 'myomspanel.onrender.com', // Set to your frontend domain (without leading dot)
+                        path: '/', 
                         httpOnly: true,
                         sameSite: "Lax",
                         secure: true,
