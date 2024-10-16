@@ -404,14 +404,14 @@ const loginUser = async (req, res) => {
                     },
                     "accessToken": tokens.access_token
                 };
-                res.setHeader('Authorization', `Bearer ${tokens.access_token}`);
+                // res.setHeader('Authorization', `Bearer ${tokens.access_token}`);
                 // Set refresh token in a secure cookie
                 res.cookie(
                     'refresh_token',
                     tokens.refresh_token.toString(),
                     {
                         httpOnly: true,
-                        sameSite: "None",
+                        sameSite: "Lax",
                         secure: true,
                         maxAge: 2 * 24 * 60 * 60 * 1000, // Set cookie expiration time (2 days)
                         path: '/' // Set a specific path for the refresh token cookie
