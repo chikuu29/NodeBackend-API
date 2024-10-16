@@ -379,6 +379,7 @@ const loginUser = async (req, res) => {
 
                 }
                 const payload = {
+                    authProvider:"MANUAL_LOGIN_MODE",
                     userName: storedData[0].userName,
                     firstName: storedData[0].firstName,
                     lastName: storedData[0].lastName,
@@ -463,7 +464,7 @@ const createSession = async (req, res) => {
             const Login_info = {
                 "message": 'ReLogin successful',
                 'success': true,
-                "authProvider": "Relogin-web",
+                "authProvider": AUTH_INFO.authProvider,
                 "login_info": {
                     userFullName: AUTH_INFO.userName,
                     role: AUTH_INFO.role,
@@ -512,7 +513,7 @@ const googleLogin = async (req, res) => {
             email: oauthData['email']
         }
 
-        const storedData = await mongoClient.findOne('user', query, { _id: 1, email: 1, oauth: 1 });
+        const storedData = await mongoClient.findOne('user', query, { _id: 1, email: 1, oauth: 1, });
         let OAuthData = {
             oauth: {
                 "GoogleOauth": { ...oauthData, ...{ dateTimeAt: new Date().toISOString() } }
@@ -536,32 +537,34 @@ const googleLogin = async (req, res) => {
                 // }
                 // console.log("UserInfor", userInfo);
                 // await mongoClient.insert('user', userInfo)
+                console.log(storedData);
+                
                 const payload = {
                     authProvider: req.user.provider.toUpperCase() + "_OAUTH_MODE",
-                    userName: storedData.name,
-                    firstName: storedData.given_name,
-                    lastName: storedData.family_name,
+                    userName: oauthData.name,
+                    firstName: oauthData.given_name,
+                    lastName: oauthData.family_name,
                     image: oauthData.picture,
                     email: oauthData.email,
                     phone: oauthData.phone || storedData.phone,
                     role: "user"
                 };
                 const tokens = generateTokens(payload, config.get('apiRequirementConfig')["LOCAL_BASELINE"]['AUTH_PROCESS']['tokenConfig']);
-                const message_info = {
-                    "message": 'Login successful',
-                    "authProvider": req.user.provider.toUpperCase() + "_OAUTH_MODE",
-                    'success': true,
-                    "login_info": {
-                        userFullName: oauthData.name,
-                        role: oauthData.role,
-                        image: oauthData.picture,
-                        email: oauthData.email,
-                        phone: oauthData.phone,
-                        firstName: oauthData.given_name,
-                        lastName: oauthData.family_name,
-                    },
-                    "accessToken": tokens.access_token
-                };
+                // const message_info = {
+                //     "message": 'Login successful',
+                //     "authProvider": req.user.provider.toUpperCase() + "_OAUTH_MODE",
+                //     'success': true,
+                //     "login_info": {
+                //         userFullName: oauthData.name,
+                //         role: oauthData.role,
+                //         image: oauthData.picture,
+                //         email: oauthData.email,
+                //         phone: oauthData.phone,
+                //         firstName: oauthData.given_name,
+                //         lastName: oauthData.family_name,
+                //     },
+                //     "accessToken": tokens.access_token
+                // };
                 // res.setHeader('Authorization', `Bearer ${tokens.access_token}`);
                 // Set refresh token in a secure cookie
                 res.cookie(
@@ -580,7 +583,7 @@ const googleLogin = async (req, res) => {
                     `accessToken=${encodeURIComponent(tokens.access_token)}` +
                     `&refreshToken=${encodeURIComponent(tokens.refresh_token)}`; // If needed, but already in cookie
 
-                res.redirect(redirectUrl);
+                res.redirect("http://localhost:5173/");
             }
         } else {
 
