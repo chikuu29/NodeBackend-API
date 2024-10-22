@@ -39,6 +39,41 @@ const generateConfig = async (req, res) => {
 
 }
 
+
+
+
+const getTemplate = async (req, res) => {
+
+    try {
+        // var refresh_token = req.cookies['refresh_token']
+        // const projectName = req.body.projectName;
+        const id = req.query.id
+        const template = await mongoClient.find("template", { id: id }, {});
+        if (template.length != 0) {
+          
+            const response = {
+                success: true,
+                result: template
+            }
+            return res.status(200).json(response);
+        } else {
+            return res.status(200).json({
+                "success": false,
+                "result": {}
+            })
+        }
+
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+
+    }
+
+}
+
 const getNotifiction = async (req, res) => {
     return res.status(200).json({
         "success": true,
@@ -75,6 +110,7 @@ const getDataBaseStatisics = async (req, res) => {
 }
 
 module.exports = {
+    getTemplate,
     generateConfig,
     getNotifiction,
     getDataBaseStatisics
