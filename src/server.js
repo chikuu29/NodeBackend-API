@@ -3,6 +3,7 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const path = require('path');
 require('dotenv').config();
+
 const configLoader = require('./configLoader');
 // const detectBrowser = require('./middlewares/detectBrowser');
 const {identifyApplication}=require('./middlewares/identifyApplicationMiddlewares');
@@ -16,7 +17,7 @@ const port = configLoader.get('serverConfig').PORT || 7000;
 // console.log("hii",configLoader.get('serverConfig').ALLOW_HEADERS);
 
 const corsOption = {
-  origin: ['https://myomspanel.onrender.com','http://localhost:5173/'],
+  origin: ['https://myomspanel.onrender.com','http://localhost:5173'],
   credentials: true,
   allowedHeaders: configLoader.get('serverConfig').ALLOW_HEADERS || ['Content-Type', 'Authorization']
 };
@@ -27,6 +28,9 @@ const corsOption = {
 
 // Use middleware
 // Use the logger middleware for all incoming requests
+// app.use(passport.session());
+
+
 app.use(loggerMiddleware);
 app.use(cookieParser());
 app.use(cors(corsOption));
@@ -40,12 +44,14 @@ app.get('/', (req, res) => {
 });
 
 // Import routes
+const oauthRoutesV1 = require('./routes/v1/oauthRouter');
 const authRoutesV1 = require('./routes/v1/authRouter');
 const appRoutesV1 = require('./routes/v1/appRouter');
 
 // Register routes
 app.use('/v1/app', appRoutesV1);
 app.use('/v1/auth', authRoutesV1);
+app.use('/v1/oauth',oauthRoutesV1)
 
 // Global error handler
 app.use((err, req, res, next) => {
