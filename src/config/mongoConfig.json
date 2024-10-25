@@ -14,11 +14,5 @@
           "host": "cluster0.sklu9w7.mongodb.net",
           "databaseName": "myMongoDB",
           "authMechanism": "SCRAM-SHA-256"
-     },
-     "projectOne": {
-          "userCol": "user",
-          "passwordHashingKey": "fFFfvdscdd323434gfgf3frrgrht55454",
-          "threadCol": "threadOne",
-          "apiSettings": "apiSettings"
      }
 }
