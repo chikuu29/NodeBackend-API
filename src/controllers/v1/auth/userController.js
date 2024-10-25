@@ -5,300 +5,73 @@ const { DateTime } = require('luxon');
 const { parseUserAgent } = require('../../../utils/useragentUtils')
 const { sendMail } = require('../../../services/emailService')
 const { renderTemplate } = require('../../../utils/templateUtils')
-// const {}=require('../../../utils/loggerUtils')
-
 const { createLogger } = require('../../../utils/loggerUtils')
-
-// const { readServerConfigFiles } = require('../../../utils/fileUtils');
-// const MongoDBManager = require('../../../commonServices/mongoServices');
-// console.log('MongoDBManager :', MongoDBManager);
-// const { readJsonFiles, requestDataInjectionCheck, logError, logInfo, sendEmail, generateTokens, getNewAccessToken } = require('../../commonServices/commonOperation');
-// const { send_email } = require('./emailService'); // Assuming you have an email service file
-
-// const mongoConfig = readJsonFiles('./src/config/mongoConfig.json');
-// const apiRequirementsConfig = readJsonFiles('./src/config/apiRequirements.json');
-// const otherConfig = readJsonFiles('./src/config/otherFeaturesConfigs.json');
-
-// const mongoDBManagerObj = new MongoDBManager();
-
-// function send_otp_email(to_email, otp) {
-//     const subject = "Your OTP for account verification";
-//     const body = `
-//     <html>
-//     <!DOCTYPE html>
-//     <html lang="en">
-//     <head>
-//         <meta charset="UTF-8">
-//         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-//         <title>Account Verification OTP</title>
-//     </head>
-//     <body style="font-family: Arial, sans-serif;">
-
-//     <table cellspacing="0" cellpadding="0" width="100%">
-//         <tr>
-//             <td style="padding: 20px;">
-//                 <h2 style="text-align: center; color: #333;">Account Verification OTP</h2>
-//                 <p style="text-align: center;">Please use the following OTP to verify your account:</p>
-//                 <div style="text-align: center; font-size: 24px; color: #007bff; padding: 10px; border: 2px solid #007bff; border-radius: 5px; margin-top: 20px;">${otp}</div>
-//             </td>
-//         </tr>
-//     </table>
-
-//     </body>
-//     </html>
-
-//     `;
-//     sendEmail(subject, body, to_email);
-// }
-
-// exports.registerUser = async (req, res) => {
-//     try {
-//         // console.log('req.body :', req.body);
-//         const projectName = req.cookies['projectName']
-//         if (!req.body || !projectName) {
-//             const message_error = { error: 'Please provide Project Name', 'success': false, message: 'input error' };
-//             logError({ ...message_error });
-//             return res.status(400).json(message_error);
-//         }
-
-//         // const { projectName } = req.body;
-//         if (!apiRequirementsConfig[projectName]) {
-//             const message_error = { error: 'projectName does not exist', 'success': false, message: 'input error' };
-//             logError({ ...message_error });
-//             return res.status(400).json(message_error);
-//         }
-
-//         const userFieldsConfig = apiRequirementsConfig[projectName].registerFields;
-//         const userFields = Object.keys(userFieldsConfig);
-
-//         const userData = requestDataInjectionCheck(userFields, userFieldsConfig, req.body);
-//         if (userData.error) {
-//             const message_error = { message: 'input error', error: JSON.stringify(userData.error), 'success': false };
-//             logError({ ...message_error });
-//             return res.status(500).json(message_error);
-//         }
-//         // console.log('userData :', userData);
-//         const existingUser = await mongoDBManagerObj.findDocuments(mongoConfig[projectName].userCol, { email: userData.email, phone: userData.phone }, {});
-//         if (existingUser.length === 0) {
-//             const hashed_password = await bcrypt.hash(userData.password, 10);
-//             userData.password = hashed_password;
-//             const otp = Math.floor(100000 + Math.random() * 900000).toString();
-//             var emailVefData = {
-//                 otp,
-//                 otpTimeStamp: DateTime.now(),
-//                 numOfEmailVefFailAttempt: 0,
-//                 blockedTillEmailVefTimeStamp: DateTime.now(),
-//                 verified: false,
-//             };
-//             userData.emailVefData = emailVefData;
-//             userData['numOfLoginFailAttempt'] = 0
-//             userData['blockTillLogInTimeStamp'] = DateTime.now()
-//             // You need to implement the send_otp_email function
-//             send_otp_email(userData.email, otp);
-//             var { emailVefData, ...userDataSendRes } = userData;
-//             await mongoDBManagerObj.insertDocument(mongoConfig[projectName].userCol, userData);
-//             const message_info = { message: `User: ${userData.userName} registered successfully`, projectName, 'success': true, data: userDataSendRes };
-//             logInfo({ ...message_info });
-//             return res.status(200).json(message_info);
-//         } else {
-//             const message_info = { error: `User: ${userData.userName} already exists`, projectName, 'success': false, message: 'User already exists' };
-//             logInfo({ ...message_info });
-//             return res.status(409).json(message_info);
-//         }
-//     } catch (err) {
-//         console.error('error in registering user-->', err);
-//         const message_error = { message: `Error in registering user`, success: false, error: err.message };
-//         logError({ ...message_error });
-//         return res.status(500).json(message_error);
-//     }
-// };
-
-// exports.forgotPasswordOnUserId = async (request, res) => {
-//     try {
-//         if (!request || !request.body || !request.body.projectName) {
-//             const message_error = { error: 'Please provide Project Name', 'success': false, message: 'input error' };
-//             logError({ ...message_error });
-//             return res.status(400).json(message_error);
-//         }
-
-//         const projectName = request.body.projectName;
-//         console.log('-----1', projectName);
-
-//         if (!apiRequirementsConfig[projectName]) {
-//             const message_error = { error: 'projectName does not exist', success: false, message: 'input error' };
-//             logError({ ...message_error });
-//             return res.status(400).json(message_error);
-//         }
-
-//         const userFieldsConfig = apiRequirementsConfig[projectName]['forgotPassword'];
-//         const userFields = Object.keys(userFieldsConfig);
-//         console.log('-----3', userFields);
-
-//         const userData = requestDataInjectionCheck(userFields, userFieldsConfig, req.body);
-//         if (userData.error) {
-//             const message_error = { message: 'input error', error: JSON.stringify(userData.error), 'success': false };
-//             logError({ ...message_error });
-//             return res.status(500).json(message_error);
-//         }
-
-//         const dbUserDataArr = await mongoDBManagerObj.findDocuments(mongoConfig[projectName]['userCol'], { 'userName': userData['userName'] }, {});
-
-//         if (dbUserDataArr.length === 0) {
-//             console.log("User doesn't exists");
-//             const message_info = { error: `User: ${userData['userName']} does not exist`, 'projectName': projectName, 'success': false, message: 'User does not exist' };
-//             logInfo({ ...message_info });
-//             return res.status(404).json(message_info);
-//         } else {
-//             const dbUserData = dbUserDataArr[0];
-//             console.log("User exists");
-//             const pwdReset = dbUserData['pwdReset'] || {};
-//             console.log('pwdReset', pwdReset);
-//             const otp = Array.from({ length: 6 }, () => Math.floor(Math.random() * 10)).join('');
-
-//             if (Object.keys(pwdReset).length === 0) {
-//                 pwdReset['otp'] = otp;
-//                 pwdReset['otpTimeStamp'] = DateTime.now();
-//                 pwdReset['blockedTillMulForgotTimeStamp'] = DateTime.now();
-//                 pwdReset['numOfMulForgotFailAttempt'] = 0;
-//                 pwdReset['passWordResetVefFailAttempt'] = 0;
-//                 dbUserData['pwdReset'] = pwdReset;
-//             } else {
-//                 if (DateTime.now() < (pwdReset['blockedTillMulForgotTimeStamp'] || DateTime.now())) {
-//                     const message_info = { error: `User: ${userData['userName']} is blocked for password verification till ${pwdReset['blockedTillMulForgotTimeStamp'] || DateTime.now()}`, 'projectName': projectName, 'success': false, message: 'User is blocked for password verification' };
-//                     logInfo({ ...message_info });
-//                     return res.status(200).json(message_info);
-//                 } else {
-//                     pwdReset['otp'] = otp;
-//                     pwdReset['otpTimeStamp'] = DateTime.now();
-//                     pwdReset['numOfMulForgotFailAttempt'] = (pwdReset['numOfMulForgotFailAttempt'] || 0) + 1;
-
-//                     if (pwdReset['numOfMulForgotFailAttempt'] >= 3) {
-//                         pwdReset['blockedTillMulForgotTimeStamp'] = DateTime.now().plus({ minutes: otherConfig[projectName].verifyUser.blockedTillEmailMinutes }).toJSDate() // 30 minutes
-//                         pwdReset['numOfMulForgotFailAttempt'] = 0;
-//                         pwdReset['passWordResetVefFailAttempt'] = 0;
-//                     }
-//                     dbUserData['pwdReset'] = pwdReset;
-//                 }
-//             }
-
-//             console.log('userData--', dbUserData);
-//             send_otp_email(dbUserData['email'], otp);
-//             console.log('------5');
-//             await mongoDBManagerObj.updateDocument(mongoConfig[projectName]['userCol'], { 'userName': dbUserData['userName'] }, { '$set': dbUserData });
-
-//             const message_info = { message: `User: ${userData['userName']} Otp sent to your registered email`, 'projectName': projectName, 'success': true };
-//             logInfo({ ...message_info });
-//             return res.status(200).json(message_info);
-//         }
-//     } catch (err) {
-//         console.log('error in resetting user password-->', err);
-//         const message_error = { message: 'Error in resetting user password: ', error: err.message, 'success': false };
-//         logError({ ...message_error });
-//         return res.status(500).json(message_error);
-//     }
-
-// }
-
-// exports.passWordResetVerification = async (request, res) => {
-//     try {
-//         if (!request || !request.body || !request.body.projectName) {
-//             const message_error = { error: 'Please provide Project Name', 'success': false, message: 'input error' };
-//             logError({ ...message_error });
-//             return res.status(400).json(message_error);
-//         }
-
-//         const projectName = request.body.projectName;
-//         console.log('-----1', projectName);
-
-//         if (!apiRequirementsConfig[projectName]) {
-//             const message_error = { error: 'projectName does not exist', 'success': false, message: 'input error' };
-//             logError({ ...message_error });
-//             return res.status(400).json(message_error);
-//         }
-
-//         const userFieldsConfig = apiRequirementsConfig[projectName]['passWordReset'];
-//         const userFields = Object.keys(userFieldsConfig);
-//         console.log('-----3', userFields);
-
-//         const userData = requestDataInjectionCheck(userFields, userFieldsConfig, req.body);
-//         if (userData.error) {
-//             const message_error = { message: 'input error', error: JSON.stringify(userData.error), 'success': false };
-//             logError({ ...message_error });
-//             return res.status(500).json(message_error);
-//         }
-//         console.log('-----5', userData);
-
-//         const userDbArr = await mongoDBManagerObj.findDocuments(mongoConfig[projectName]['userCol'], { 'userName': userData['userName'] }, {});
-//         const userDb = userDbArr.length > 0 ? userDbArr[0] : {};
-
-//         if (Object.keys(userDb).length === 0) {
-//             console.log("User doesn't exist");
-//             const message_error = { error: `User: ${userData['userName']} does not exist`, 'projectName': projectName, 'success': false, message: 'User does not exist' };
-//             logError({ ...message_error });
-//             return res.status(404).json(message_error);
-//         } else {
-//             console.log("User exists");
-//             const pwdresetData = userDb['pwdReset'] || {};
-
-//             if (Object.keys(pwdresetData).length === 0) {
-//                 const message_error = { error: `User: ${userData['userName']} does not have otp`, 'projectName': projectName, 'success': false, message: 'User does not have otp' };
-//                 logError({ ...message_error });
-//                 return res.status(400).json(message_error);
-//             }
-
-//             if (pwdresetData['blockedTillMulForgotTimeStamp'] !== null && DateTime.now() < (pwdresetData['blockedTillMulForgotTimeStamp'] || DateTime.now())) {
-//                 const message_info = { error: `User: ${userData['userName']} blocked due to multiple otp fail attempts till ${pwdresetData['blockedTillMulForgotTimeStamp']}`, 'projectName': projectName, 'success': false, message: 'User is blocked for password verification' };
-//                 logInfo({ ...message_info });
-//                 return res.status(400).json(message_info);
-//             }
-
-//             if ((DateTime.now() - new Date(pwdresetData['otpTimeStamp'])) > otherConfig[projectName]['verifyUser']['blockedTillEmailMinutes'] * 60000) {
-//                 return res.status(400).json({ error: 'Otp expired', 'projectName': projectName, 'success': false, message: 'Otp expired' });
-//             }
-
-//             if ((DateTime.now() - new Date(pwdresetData['otpTimeStamp'])) < 5 * 60000) {
-//                 if (pwdresetData['otp'] !== userData['otp']) {
-//                     pwdresetData['passWordResetVefFailAttempt'] += 1;
-//                     if (pwdresetData['passWordResetVefFailAttempt'] >= 3) {
-//                         pwdresetData['blockedTillMulForgotTimeStamp'] = DateTime.now().plus({ minutes: otherConfig[projectName]['verifyUser']['blockedTillEmailMinutes'] }).toJSDate()
-//                         pwdresetData['passWordResetVefFailAttempt'] = 0;
-//                     }
-//                     userDb['pwdReset'] = pwdresetData;
-//                     await mongoDBManagerObj.updateDocument(mongoConfig[projectName]['userCol'], { 'userName': userData['userName'] }, { '$set': userDb });
-//                     const message_error = { error: `User: ${userData['userName']} Invalid otp`, 'projectName': projectName, 'success': false, message: 'Invalid otp' };
-//                     logError({ ...message_error });
-//                     return res.status(400).json(message_error);
-//                 } else {
-//                     pwdresetData['passWordResetVefFailAttempt'] = 0;
-//                     userDb['blockTillLogInTimeStamp'] = DateTime.now();
-//                     pwdresetData['otp'] = Array.from({ length: 6 }, () => Math.floor(Math.random() * 10)).join('');
-//                     const hashed_password = await bcrypt.hash(userData['newPassword'], 10);
-//                     pwdresetData['password'] = hashed_password;
-//                     userDb['pwdReset'] = pwdresetData;
-//                     await mongoDBManagerObj.updateDocument(mongoConfig[projectName]['userCol'], { 'userName': userData['userName'] }, { '$set': userDb });
-//                     const message_info = { message: `User: ${userData['userName']} Password reset successfully`, 'projectName': projectName, 'success': true };
-//                     logInfo({ ...message_info });
-//                     return res.status(200).json(message_info);
-//                 }
-//             }
-//         }
-//     } catch (err) {
-//         console.log('error in resetting user password-->', err);
-//         const message_error = { message: 'Error in resetting user password ', error: err.message, 'success': false };
-//         logError({ ...message_error });
-//         return res.status(500).json(message_error);
-//     }
-
-// }
-
-// const config=readServerConfigFiles('./src/config/apiRequirements.json')
-// console.log(config);
 const config = require('../../../configLoader');
 const { dataSanitizer } = require('../../../utils/dataSanitizerUtils')
 const { mongoClient } = require('../../../services/mongoService')
 const { generateTokens, getNewAccessToken } = require('./authentication');
 const { required } = require('joi');
-// const { createLogger } = require('winston');
+
+exports.registerUser = async (req, res) => {
+    try {
+        // console.log('req.body :', req.body);
+        const projectName = req.cookies['projectName']
+        if (!req.body || !projectName) {
+            const message_error = { error: 'Please provide Project Name', 'success': false, message: 'input error' };
+            logError({ ...message_error });
+            return res.status(400).json(message_error);
+        }
+        // const { projectName } = req.body;
+        if (!apiRequirementsConfig[projectName]) {
+            const message_error = { error: 'projectName does not exist', 'success': false, message: 'input error' };
+            logError({ ...message_error });
+            return res.status(400).json(message_error);
+        }
+        const userFieldsConfig = apiRequirementsConfig[projectName].registerFields;
+        const userFields = Object.keys(userFieldsConfig);
+        const userData = requestDataInjectionCheck(userFields, userFieldsConfig, req.body);
+        if (userData.error) {
+            const message_error = { message: 'input error', error: JSON.stringify(userData.error), 'success': false };
+            logError({ ...message_error });
+            return res.status(500).json(message_error);
+        }
+        // console.log('userData :', userData);
+        const existingUser = await mongoDBManagerObj.findDocuments(mongoConfig[projectName].userCol, { email: userData.email, phone: userData.phone }, {});
+        if (existingUser.length === 0) {
+            const hashed_password = await bcrypt.hash(userData.password, 10);
+            userData.password = hashed_password;
+            const otp = Math.floor(100000 + Math.random() * 900000).toString();
+            var emailVefData = {
+                otp,
+                otpTimeStamp: DateTime.now(),
+                numOfEmailVefFailAttempt: 0,
+                blockedTillEmailVefTimeStamp: DateTime.now(),
+                verified: false,
+            };
+            userData.emailVefData = emailVefData;
+            userData['numOfLoginFailAttempt'] = 0
+            userData['blockTillLogInTimeStamp'] = DateTime.now()
+            // You need to implement the send_otp_email function
+            send_otp_email(userData.email, otp);
+            var { emailVefData, ...userDataSendRes } = userData;
+            await mongoDBManagerObj.insertDocument(mongoConfig[projectName].userCol, userData);
+            const message_info = { message: `User: ${userData.userName} registered successfully`, projectName, 'success': true, data: userDataSendRes };
+            logInfo({ ...message_info });
+            return res.status(200).json(message_info);
+        } else {
+            const message_info = { error: `User: ${userData.userName} already exists`, projectName, 'success': false, message: 'User already exists' };
+            logInfo({ ...message_info });
+            return res.status(409).json(message_info);
+        }
+    } catch (err) {
+        console.error('error in registering user-->', err);
+        const message_error = { message: `Error in registering user`, success: false, error: err.message };
+        logError({ ...message_error });
+        return res.status(500).json(message_error);
+    }
+};
+
+
 
 
 const loginUser = async (req, res) => {
