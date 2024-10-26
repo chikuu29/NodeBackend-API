@@ -12,61 +12,58 @@ const { mongoClient } = require('../../../services/mongoService')
 const { generateTokens, getNewAccessToken } = require('./authentication');
 const { required } = require('joi');
 
-exports.registerUser = async (req, res) => {
+const registerUser = async (req, res) => {
     try {
+        console.log(req.body);
+        
         // console.log('req.body :', req.body);
-        const projectName = req.cookies['projectName']
-        if (!req.body || !projectName) {
-            const message_error = { error: 'Please provide Project Name', 'success': false, message: 'input error' };
-            logError({ ...message_error });
-            return res.status(400).json(message_error);
-        }
+        
         // const { projectName } = req.body;
-        if (!apiRequirementsConfig[projectName]) {
-            const message_error = { error: 'projectName does not exist', 'success': false, message: 'input error' };
-            logError({ ...message_error });
-            return res.status(400).json(message_error);
-        }
-        const userFieldsConfig = apiRequirementsConfig[projectName].registerFields;
-        const userFields = Object.keys(userFieldsConfig);
-        const userData = requestDataInjectionCheck(userFields, userFieldsConfig, req.body);
-        if (userData.error) {
-            const message_error = { message: 'input error', error: JSON.stringify(userData.error), 'success': false };
-            logError({ ...message_error });
-            return res.status(500).json(message_error);
-        }
-        // console.log('userData :', userData);
-        const existingUser = await mongoDBManagerObj.findDocuments(mongoConfig[projectName].userCol, { email: userData.email, phone: userData.phone }, {});
-        if (existingUser.length === 0) {
-            const hashed_password = await bcrypt.hash(userData.password, 10);
-            userData.password = hashed_password;
-            const otp = Math.floor(100000 + Math.random() * 900000).toString();
-            var emailVefData = {
-                otp,
-                otpTimeStamp: DateTime.now(),
-                numOfEmailVefFailAttempt: 0,
-                blockedTillEmailVefTimeStamp: DateTime.now(),
-                verified: false,
-            };
-            userData.emailVefData = emailVefData;
-            userData['numOfLoginFailAttempt'] = 0
-            userData['blockTillLogInTimeStamp'] = DateTime.now()
-            // You need to implement the send_otp_email function
-            send_otp_email(userData.email, otp);
-            var { emailVefData, ...userDataSendRes } = userData;
-            await mongoDBManagerObj.insertDocument(mongoConfig[projectName].userCol, userData);
-            const message_info = { message: `User: ${userData.userName} registered successfully`, projectName, 'success': true, data: userDataSendRes };
-            logInfo({ ...message_info });
-            return res.status(200).json(message_info);
-        } else {
-            const message_info = { error: `User: ${userData.userName} already exists`, projectName, 'success': false, message: 'User already exists' };
-            logInfo({ ...message_info });
-            return res.status(409).json(message_info);
-        }
+        // if (!apiRequirementsConfig[projectName]) {
+        //     const message_error = { error: 'projectName does not exist', 'success': false, message: 'input error' };
+        //     logError({ ...message_error });
+        //     return res.status(400).json(message_error);
+        // }
+        // const userFieldsConfig = apiRequirementsConfig[projectName].registerFields;
+        // const userFields = Object.keys(userFieldsConfig);
+        // const userData = requestDataInjectionCheck(userFields, userFieldsConfig, req.body);
+        // if (userData.error) {
+        //     const message_error = { message: 'input error', error: JSON.stringify(userData.error), 'success': false };
+        //     logError({ ...message_error });
+        //     return res.status(500).json(message_error);
+        // }
+        // // console.log('userData :', userData);
+        // const existingUser = await mongoDBManagerObj.findDocuments(mongoConfig[projectName].userCol, { email: userData.email, phone: userData.phone }, {});
+        // if (existingUser.length === 0) {
+        //     const hashed_password = await bcrypt.hash(userData.password, 10);
+        //     userData.password = hashed_password;
+        //     const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        //     var emailVefData = {
+        //         otp,
+        //         otpTimeStamp: DateTime.now(),
+        //         numOfEmailVefFailAttempt: 0,
+        //         blockedTillEmailVefTimeStamp: DateTime.now(),
+        //         verified: false,
+        //     };
+        //     userData.emailVefData = emailVefData;
+        //     userData['numOfLoginFailAttempt'] = 0
+        //     userData['blockTillLogInTimeStamp'] = DateTime.now()
+        //     // You need to implement the send_otp_email function
+        //     send_otp_email(userData.email, otp);
+        //     var { emailVefData, ...userDataSendRes } = userData;
+        //     await mongoDBManagerObj.insertDocument(mongoConfig[projectName].userCol, userData);
+        //     const message_info = { message: `User: ${userData.userName} registered successfully`, projectName, 'success': true, data: userDataSendRes };
+        //     logInfo({ ...message_info });
+        //     return res.status(200).json(message_info);
+        // } else {
+        //     const message_info = { error: `User: ${userData.userName} already exists`, projectName, 'success': false, message: 'User already exists' };
+        //     logInfo({ ...message_info });
+        //     return res.status(409).json(message_info);
+        // }
     } catch (err) {
         console.error('error in registering user-->', err);
         const message_error = { message: `Error in registering user`, success: false, error: err.message };
-        logError({ ...message_error });
+        // logError({ ...message_error });
         return res.status(500).json(message_error);
     }
 };
@@ -401,6 +398,7 @@ const googleLogin = async (req, res) => {
 
 
 module.exports = {
+    registerUser,
     loginUser,
     createSession,
     logoutUser,
