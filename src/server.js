@@ -47,11 +47,12 @@ app.get('/', (req, res) => {
 const oauthRoutesV1 = require('./routes/v1/oauthRouter');
 const authRoutesV1 = require('./routes/v1/authRouter');
 const appRoutesV1 = require('./routes/v1/appRouter');
-
+const gymRoutersV1 = require('./routes/v1/gymRouter');
 // Register routes
 app.use('/v1/app', appRoutesV1);
 app.use('/v1/auth', authRoutesV1);
 app.use('/v1/oauth',oauthRoutesV1)
+app.use('/v1/gym',gymRoutersV1)
 
 // Global error handler
 app.use((err, req, res, next) => {

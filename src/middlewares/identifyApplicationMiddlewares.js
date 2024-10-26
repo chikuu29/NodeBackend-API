@@ -1,6 +1,6 @@
 
 const config = require('../configLoader');
-const {validateAccessToken}=require('../controllers/v1/auth/authentication')
+const { validateAccessToken } = require('../controllers/v1/auth/authentication')
 const checkSession = async (req, res, next) => {
     try {
         var refresh_token = req.cookies['refresh_token']
@@ -50,30 +50,18 @@ const authenticate = async (req, res, next) => {
 
 const identifyApplication = async (req, res, next) => {
     console.log("🚀 === Request received === 🚀");
-    // Add more detailed logging if needed
+    const url = req.headers['referer'] || ''
+    const appMatch = url.match(/[?&]app=([^&]+)/)
+    const app = appMatch ? appMatch[1] : null
     console.log(`Method: ${req.method}, URL: ${req.url}`);
-    if(req.url=="/" || req.url.includes('public') || req.url.includes('oauth'))return next()
-    // console.log("REQUEST FROM", req['headers']['x-requested-from']);
-    // console.log("SERVER CONFIG", config.get('serverConfig'));
+    if (req.url == "/" || req.url.includes('public') || req.url.includes('oauth')) return next()
     try {
         X_CLIENT_ID = config.get('serverConfig')['X_CLIENT_ID'] || []
-        // console.log("X_CLIENT_ID", X_CLIENT_ID);
-        // // console.log("X",req['headers']['x-client-id']);
-        // console.log("req['headers']",req['headers']);
-        
-        
         if (X_CLIENT_ID.includes(req['headers']['x-client-id'])) {
-            // console.log("project Name", projectName);
-            // const validateTokenInfo = validateAccessToken(refresh_token, otherConfig[projectName].tokenConfig.secretKey);
-            // if (validateTokenInfo) {
-            //     req.validateTokenInfo = validateTokenInfo;
-                req.CLIENT_NAME = req['headers']['x-client-id'];
-                return next();
-            // } else {
-            //     return res.status(401).json({ success: false, message: "Login State Is Lost!" });
-            // }
-            // return next();
-        }else{
+            req.CLIENT_NAME = req['headers']['x-client-id'];
+            req.APP_DB_COLLECTION=config.get('databaseConfig')['prefixCollection'][app] || null
+            return next();
+        } else {
             return res.status(401).json({ success: false, message: "Unautorization Access" });
         }
     } catch (error) {
@@ -82,4 +70,4 @@ const identifyApplication = async (req, res, next) => {
 
 }
 
-module.exports = {identifyApplication,checkSession,authenticate };
+module.exports = { identifyApplication, checkSession, authenticate };
