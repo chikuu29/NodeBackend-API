@@ -77,7 +77,6 @@ const loginUser = async (req, res) => {
     try {
         const requestData = req.body;
         const CLIENT_NAME = req.CLIENT_NAME
-
         if (!requestData || !CLIENT_NAME) {
             return res.status(400).json({ error: 'Please provide Project Name', 'success': false, message: 'Input error' });
         }
@@ -158,6 +157,10 @@ const loginUser = async (req, res) => {
                     phone: storedData[0].phone,
                     role: "user"
                 };
+                console.log('HII');
+                
+                console.log("ok",config.get('apiRequirementConfig')[CLIENT_NAME]['AUTH_PROCESS']['tokenConfig']);
+                
                 const tokens = generateTokens(payload, config.get('apiRequirementConfig')[CLIENT_NAME]['AUTH_PROCESS']['tokenConfig']);
                 const message_info = {
                     "message": 'Login successful',

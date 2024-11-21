@@ -60,6 +60,7 @@ const identifyApplication = async (req, res, next) => {
         if (X_CLIENT_ID.includes(req['headers']['x-client-id'])) {
             req.CLIENT_NAME = req['headers']['x-client-id'];
             req.APP_DB_COLLECTION=config.get('databaseConfig')['prefixCollection'][app] || null
+            req.appName=app || 'defult'
             return next();
         } else {
             return res.status(401).json({ success: false, message: "Unautorization Access" });

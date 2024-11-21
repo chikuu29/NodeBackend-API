@@ -6,18 +6,15 @@ require('dotenv').config();
 
 const configLoader = require('./configLoader');
 // const detectBrowser = require('./middlewares/detectBrowser');
-const {identifyApplication}=require('./middlewares/identifyApplicationMiddlewares');
+const { identifyApplication } = require('./middlewares/identifyApplicationMiddlewares');
 const loggerMiddleware = require('./middlewares/loggerMiddleware');
 // Initialize express app
 const app = express();
 const port = configLoader.get('serverConfig').PORT || 7000;
 
-// Define CORS options
-// console.log("ALLOW ORIGIN",process.env.CORS_ORIGINS.split(','));
-// console.log("hii",configLoader.get('serverConfig').ALLOW_HEADERS);
 
 const corsOption = {
-  origin: ['https://myomspanel.onrender.com','http://localhost:5173'],
+  origin: ['https://myomspanel.onrender.com', 'http://localhost:5173'],
   credentials: true,
   allowedHeaders: configLoader.get('serverConfig').ALLOW_HEADERS || ['Content-Type', 'Authorization']
 };
@@ -36,8 +33,10 @@ app.use(cookieParser());
 app.use(cors(corsOption));
 app.use(identifyApplication)
 app.use(express.json());
+// Serve files from the 'public' folder
 app.use('/public', express.static(path.join(__dirname, 'public')));
-
+// Serve files from the 'storage' folder outside of 'src'
+app.use('/public/storage', express.static(path.join(__dirname, '../storage')));
 // Serve the main HTML file
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, './public/index.html'));
@@ -51,8 +50,8 @@ const gymRoutersV1 = require('./routes/v1/gymRouter');
 // Register routes
 app.use('/v1/app', appRoutesV1);
 app.use('/v1/auth', authRoutesV1);
-app.use('/v1/oauth',oauthRoutesV1)
-app.use('/v1/gym',gymRoutersV1)
+app.use('/v1/oauth', oauthRoutesV1)
+app.use('/v1/gym', gymRoutersV1)
 
 // Global error handler
 app.use((err, req, res, next) => {
