@@ -33,6 +33,8 @@ app.use(cookieParser());
 app.use(cors(corsOption));
 app.use(identifyApplication)
 app.use(express.json());
+// Middleware to parse URL-encoded form data
+app.use(express.urlencoded({ extended: true }));
 // Serve files from the 'public' folder
 app.use('/public', express.static(path.join(__dirname, 'public')));
 // Serve files from the 'storage' folder outside of 'src'

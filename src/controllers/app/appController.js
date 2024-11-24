@@ -138,10 +138,10 @@ const getDataBaseStatisics = async (req, res) => {
 const uploadFile = async (req, res) => {
     console.log("===CALLING UPLOAD FILE===");
 
-    upload.array('files', 10)(req, res,async (err) => { // Handle up to 10 files
+    upload.array('files', 10)(req, res, async (err) => { // Handle up to 10 files
 
         console.log(req);
-        
+
         if (err) {
             return res.status(500).send({ success: false, message: `File upload error: ${err.message}` });
         }
@@ -157,30 +157,29 @@ const uploadFile = async (req, res) => {
         const baseUrl = process.env.FILE_UPLOAD_URL || 'http://localhost:7000/public/storage/'; // Replace with actual URL
 
         // The directory where the uploaded files are stored (absolute path)
-        const storageDirectory = path.resolve(__dirname, '../../../storage/'+req.appName); // Adjust based on where your storage is
+        const storageDirectory = path.resolve(__dirname, '../../../storage/' + req.appName); // Adjust based on where your storage is
 
         // Create a detailed response message
         let responseMessage = 'Files uploaded successfully:';
         const fileDetails = files.map(file => ({
             filename: file.filename,             // Filename of the uploaded file
-            originalname: file.originalname,     // Original filename uploaded by the user
+            originalName: file.originalname,     // Original filename uploaded by the user
             size: file.size,                     // Size of the file in bytes
-            mimetype: file.mimetype,             // MIME type of the uploaded file
-            absolutePath:path.join(storageDirectory,file.filename),   // URL to access the uploaded file
-            accessObjectPath:`public/storage/${req.appName}/${file.filename}` // Absolute path on server's filesystem
+            mimeType: file.mimetype,             // MIME type of the uploaded file
+            absolutePath: path.join(storageDirectory, file.filename),   // URL to access the uploaded file
+            accessObjectPath: `public/storage/${req.appName}/${file.filename}`, // Absolute path on server's filesystem
+            accessUrl:''
         }));
-        const fileStorage = await mongoClient.insert("uploadFiles", {
-            uploadFiles:fileDetails,
-            appName:req.appName,
+        await mongoClient.insert("uploadFiles", {
+            uploadFiles: fileDetails,
+            appName: req.appName,
             ...req.tokenInfo
         });
-
-
         // Sending JSON response with file details
         res.status(200).send({
             success: true,
             message: responseMessage,
-            files: fileDetails
+            uploadFiles: fileDetails
         });
     });
 };
