@@ -1,17 +1,26 @@
 
 const config = require('../configLoader');
-const { validateAccessToken } = require('../controllers/v1/auth/authentication')
+const { validateAccessToken,validateToken } = require('../controllers/v1/auth/authentication')
 const checkSession = async (req, res, next) => {
     try {
-        var refresh_token = req.cookies['refresh_token']
+        console.log("checkkk",req.cookies);
+        const isProduction = process.env.NODE_ENV === 'production';
+        const cookieName = `${isProduction ? '__Secure-' : ''}session-token`;
+        console.log(cookieName);
+        
+        var refresh_token = req.cookies[cookieName]
+        console.log("req",refresh_token);
+        
         const CLIENT_NAME = req.CLIENT_NAME
         if (!refresh_token) {
             return res.status(401).json({ success: false, message: "Login State Lost" });
         } else {
             // console.log("project Name", projectName);
-            const validateTokenInfo = validateAccessToken(refresh_token, config.get('apiRequirementConfig')[CLIENT_NAME]['AUTH_PROCESS']['tokenConfig']);
-            if (validateTokenInfo) {
-                req.AUTH_INFO = validateTokenInfo;
+            // const validateTokenInfo = validateAccessToken(refresh_token, config.get('apiRequirementConfig')[CLIENT_NAME]['AUTH_PROCESS']['tokenConfig']);
+            const decodeData=  await validateToken(refresh_token)
+            console.log("validateToken",decodeData);
+            if (decodeData) {
+                req.AUTH_INFO = decodeData;
                 // req.projectName = projectName;
                 return next();
             } else {
@@ -32,7 +41,8 @@ const authenticate = async (req, res, next) => {
             res.status(403).json({ success: false, message: "Forbidden" })
         }
         const CLIENT_NAME = req.CLIENT_NAME
-        const tokenInfo = validateAccessToken(accessToken, config.get('apiRequirementConfig')[CLIENT_NAME]['AUTH_PROCESS']['tokenConfig']);
+        // const tokenInfo = validateAccessToken(accessToken, config.get('apiRequirementConfig')[CLIENT_NAME]['AUTH_PROCESS']['tokenConfig']);
+        const tokenInfo=validateToken(accessToken)
         if (tokenInfo) {
             req.tokenInfo = tokenInfo;
             return next();

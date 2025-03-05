@@ -5,6 +5,7 @@ const router = express.Router();
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const { googleLogin } = require('../../controllers/v1/auth/userController');
+const { oauthGrantToken } = require('../../controllers/v1/auth/authentication')
 // Google OAuth Strategy setup
 const callbackURL = process.env.NODE_ENV === 'production'
     ? 'https://myomspanel.onrender.com/api/v1/oauth/google/callback'  // Production URL
@@ -36,7 +37,7 @@ router.get(
         const redirectTo = req.query.redirectTo || '/';
         // Store `redirectTo` in a session or pass as a query param
         // const callbackUrl = `/auth/google/callback?redirectTo=${encodeURIComponent(redirectTo)}`;
-       
+
         // Proceed with Google authentication
         passport.authenticate('google', {
             scope: ['profile', 'email'],
@@ -55,4 +56,9 @@ router.get('/google/callback',
     }),
     googleLogin
 );
+
+
+// Call Autorization aserver and do Token Exchange
+router.post('/token', oauthGrantToken)
+
 module.exports = router;

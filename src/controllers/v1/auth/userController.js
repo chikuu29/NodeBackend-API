@@ -221,19 +221,37 @@ const loginUser = async (req, res) => {
 }
 
 const createSession = async (req, res) => {
-    console.log("===CALLING CREATESESSION===");
-
+    console.log("===CALLING CREATESESSION===",req.AUTH_INFO);
+    
+    const isProduction = process.env.NODE_ENV === 'production';
+    const cookieName = `${isProduction ? '__Secure-' : ''}session-token`;
     try {
-        var refresh_token = req.cookies['refresh_token']
+        var session_play = req.cookies[cookieName]
+        console.log("hiii",session_play);
+        
         // const projectName = req.projectName;
-        const CLIENT_NAME = req.CLIENT_NAME
-        console.log(config.get('apiRequirementConfig')[CLIENT_NAME]['AUTH_PROCESS']['tokenConfig']);
+        // const CLIENT_NAME = req.CLIENT_NAME
+        // console.log(config.get('apiRequirementConfig')[CLIENT_NAME]['AUTH_PROCESS']['tokenConfig']);
 
-        const newAccessToken = getNewAccessToken(refresh_token, config.get('apiRequirementConfig')[CLIENT_NAME]['AUTH_PROCESS']['tokenConfig']);
+        // const newAccessToken = getNewAccessToken(refresh_token, config.get('apiRequirementConfig')[CLIENT_NAME]['AUTH_PROCESS']['tokenConfig']);
         // console.log(newAccessToken);
+         // Get token URI from config
+      
 
-        if (newAccessToken) {
 
+        if (session_play) {
+            const tokenUri = configLoader.get('serverConfig')['OAUTH_LOGIN_SYSTEM']['OAUTH_CREDENTIALS']['token_uri'];
+            // console.log("Token URI:", tokenUri);
+    
+            // Make POST request to OAuth server
+            const response = await axios.post(tokenUri, req.body, {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+            console.log(response.data);
+    
+            const { access_token, refresh_token, refresh_exp } = response.data;
             var AUTH_INFO = req.AUTH_INFO;
             const Login_info = {
                 "message": 'ReLogin successful',
@@ -248,7 +266,7 @@ const createSession = async (req, res) => {
                     firstName: AUTH_INFO.firstName,
                     lastName: AUTH_INFO.lastName
                 },
-                "accessToken": newAccessToken
+                "accessToken": "newAccessToken"
             };
             return res.status(200).json(Login_info);
         } else {
