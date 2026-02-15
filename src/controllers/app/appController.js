@@ -73,7 +73,9 @@ const getTemplate = async (req, res) => {
         // var refresh_token = req.cookies['refresh_token']
         // const projectName = req.body.projectName;
         const id = req.query.id
-        const template = await mongoClient.find("template", { id: id }, {});
+        console.log(req.query);
+        
+        const template = await mongoClient.find("template",  req.query , {});
         if (template.length != 0) {
 
             const response = {

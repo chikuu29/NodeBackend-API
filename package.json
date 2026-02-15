@@ -1,5 +1,5 @@
 {
-  "name": "nodebackendserver",
+  "name": "workspaceplatformbackend",
   "version": "1.0.0",
   "description": "\"Backend Service Architecture\"",
   "main": "src/server.js",

@@ -279,7 +279,7 @@ const createSession = async (req, res) => {
 }
 
 const logoutUser = async (req, res) => {
-    res.clearCookie('refresh_token', {
+    res.clearCookie('session-token', {
         httpOnly: true,
         sameSite: 'none',
         httpOnly: true,

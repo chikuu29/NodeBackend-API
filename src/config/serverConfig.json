@@ -42,7 +42,7 @@
             "client_id": "117890666256-4mehboj2c81sni051ncsb4c5990b18bu.apps.googleusercontent.com",
             "project_id": "myoms-438713",
             "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-            "token_uri": "https://own-oauth-indentity-provider-backend.onrender.com/oauth/token",
+            "token_uri": "http://localhost:8000/oauth/token",
             "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
             "client_secret": "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",
             "redirect_uris": [
@@ -55,7 +55,7 @@
             ]
         },
         "OAUTH_OPENID_CONNECT":{
-            "production":"https://own-oauth-indentity-provider-backend.onrender.com/.well-known/openid-configuration",
+            "production":"http://localhost:8000/.well-known/openid-configuration",
             "development":"http://localhost:8000/.well-known/openid-configuration"
         }
     }

@@ -97,7 +97,7 @@ const validateToken = async (token) => {
         console.log("JWKS URI:", jwks_uri);
 
         // Fetch JWKS (JSON Web Key Set)
-        const jwksResponse = await axios.get(jwks_uri);
+        const jwksResponse = await axios.get( "http://localhost:8000/.well-known/jwks.json");
         const jwks = jwksResponse.data.keys;
 
         // Decode JWT to get the 'kid' (Key ID) from header
