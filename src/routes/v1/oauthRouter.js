@@ -11,11 +11,15 @@ const callbackURL = process.env.NODE_ENV === 'production'
     ? 'https://myomspanel.onrender.com/api/v1/oauth/google/callback'  // Production URL
     : 'http://localhost:5173/api/v1/oauth/google/callback';  // Development URL
 
+const googleConfigFromFile = configLoader.get('serverConfig')['OAUTH_LOGIN_SYSTEM']['GOOGLE_AUTH_CREDENTIALS'] || {};
+const googleClientId = process.env.GOOGLE_CLIENT_ID || googleConfigFromFile['client_id'];
+const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET || googleConfigFromFile['client_secret'];
+
 passport.use(
     new GoogleStrategy(
         {
-            clientID: configLoader.get('serverConfig')['OAUTH_LOGIN_SYSTEM']['GOOGLE_AUTH_CREDENTIALS']['client_id'],
-            clientSecret: configLoader.get('serverConfig')['OAUTH_LOGIN_SYSTEM']['GOOGLE_AUTH_CREDENTIALS']['client_secret'],
+            clientID: googleClientId,
+            clientSecret: googleClientSecret,
             callbackURL: process.env.GOOGLE_OAUTH_CALLBACK_URL || callbackURL,
         },
         (accessToken, refreshToken, profile, done) => {
