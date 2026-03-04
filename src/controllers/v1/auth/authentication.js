@@ -116,7 +116,29 @@ const oauthGrantToken = async (req, res) => {
             maxAge,
         });
 
-        return res.status(200).json(tokenData);
+        // Internally call the OAuth2 server's userinfo endpoint to get
+        // full user profile — so the frontend gets everything in one call.
+        const userInfo = await oauth2Client.getUserInfo(tokenData.access_token);
+        console.log("User Info:", userInfo);
+
+        const responsePayload = {
+            ...tokenData,
+            success: true,
+            authProvider: userInfo.authProvider || 'OAUTH',
+            login_info: {
+                userFullName: userInfo.name || userInfo.userName || '',
+                role: userInfo.role || '',
+                email: userInfo.email || '',
+                phone: userInfo.phone || null,
+                image: userInfo.picture || userInfo.image || null,
+                firstName: userInfo.given_name || userInfo.firstName || '',
+                lastName: userInfo.family_name || userInfo.lastName || '',
+                tenant_name: userInfo.tenant_name || null,
+                permissions: userInfo.permissions || [],
+            },
+        };
+
+        return res.status(200).json(responsePayload);
     } catch (error) {
         if (error.response) {
             console.error('Error Response:', error.response.data);

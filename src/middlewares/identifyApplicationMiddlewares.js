@@ -35,29 +35,51 @@ const checkSession = async (req, res, next) => {
     }
 }
 
+/**
+ * Centralized Bearer token extraction.
+ * Parses `Authorization: Bearer <token>` and sets `req.accessToken`.
+ * If the header is missing or malformed, `req.accessToken` is null.
+ *
+ * Usage: attach before any handler that needs the access token.
+ *   router.get('/some-route', extractBearerToken, handler);
+ *   // In handler: const token = req.accessToken;
+ */
+const extractBearerToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+
+    req.accessToken = (authHeader && authHeader.startsWith('Bearer '))
+        ? authHeader.slice(7)  // 'Bearer '.length === 7
+        : null;
+
+    return next();
+};
+
+/**
+ * Authentication middleware — validates the Bearer token via OAuth2 JWKS.
+ * Requires `extractBearerToken` to run first (or be chained).
+ */
 const authenticate = async (req, res, next) => {
     try {
-        const accessToken = req.headers.authorization.split('Bearer ').pop();
+        // Use centralized extraction if not already done
+        const accessToken = req.accessToken
+            || (req.headers.authorization && req.headers.authorization.split('Bearer ').pop());
+
         if (!accessToken) {
-            res.status(403).json({ success: false, message: "Forbidden" })
+            return res.status(403).json({ success: false, message: 'Forbidden — no access token provided' });
         }
-        const CLIENT_NAME = req.CLIENT_NAME
-        // const tokenInfo = validateAccessToken(accessToken, config.get('apiRequirementConfig')[CLIENT_NAME]['AUTH_PROCESS']['tokenConfig']);
-        const tokenInfo = validateToken(accessToken)
+
+        const tokenInfo = await validateToken(accessToken);
         if (tokenInfo) {
             req.tokenInfo = tokenInfo;
+            req.accessToken = accessToken; // Ensure it's set for downstream handlers
             return next();
         } else {
-            message_error = { error: 'Invalid or expired access token', 'success': false, message: 'permission error' };
-            logError({ ...message_error });
-            return res.status(403).json(message_error);
+            return res.status(403).json({ success: false, message: 'Invalid or expired access token' });
         }
-
-
     } catch (error) {
-        return res.status(401).json({ success: false, message: "Unautorization" })
+        return res.status(401).json({ success: false, message: 'Unauthorized' });
     }
-}
+};
 
 const identifyApplication = async (req, res, next) => {
     console.log("🚀 === Request received === 🚀");
@@ -82,4 +104,4 @@ const identifyApplication = async (req, res, next) => {
 
 }
 
-module.exports = { identifyApplication, checkSession, authenticate };
+module.exports = { identifyApplication, checkSession, authenticate, extractBearerToken };

@@ -152,18 +152,26 @@ class OAuth2Client {
      * Called by /auth/me to get a fresh access_token on every page refresh.
      *
      * @param {string} refreshToken - The refresh token (stored in httpOnly cookie)
+     * @param {string} [deviceId] - Device identifier to prevent device mismatch errors
      * @returns {Promise<Object>} Token response with fresh access_token
      */
-    async refreshAccessToken(refreshToken) {
+    async refreshAccessToken(refreshToken, deviceId) {
         const discovery = await this.getDiscovery();
         const tokenUrl = discovery.token_endpoint || process.env.OAUTH_TOKEN_URI;
 
-        const response = await axios.post(tokenUrl, {
+        const payload = {
             grant_type: 'refresh_token',
             refresh_token: refreshToken,
             client_id: process.env.OAUTH_CLIENT_ID,
             client_secret: process.env.OAUTH_CLIENT_SECRET,
-        }, {
+        };
+
+        // Include device_id to prevent device mismatch rejection
+        if (deviceId) {
+            payload.device_id = deviceId;
+        }
+
+        const response = await axios.post(tokenUrl, payload, {
             headers: { 'Content-Type': 'application/json' },
         });
 
@@ -244,6 +252,65 @@ class OAuth2Client {
             console.error('❌ Token validation failed:', error.message);
             return null;
         }
+    }
+
+    // ───────────────────────────────────────────────
+    // Session Revocation (Logout)
+    // ───────────────────────────────────────────────
+
+    /**
+     * Derive the Auth Server base URL from the OpenID discovery URL.
+     * e.g. "http://localhost:8000/.well-known/openid-configuration" → "http://localhost:8000"
+     */
+    _getAuthServerBase() {
+        return process.env.OAUTH_OPENID_CONFIG_URL.replace('/.well-known/openid-configuration', '');
+    }
+
+    /**
+     * Revoke a specific refresh token on the OAuth2 server.
+     * Per the integration guide: POST {AUTH_SERVER}/oauth2/revoke
+     * Body: { "token": "THE_REFRESH_TOKEN" }
+     *
+     * @param {string} accessToken - Bearer token for authorization
+     * @param {string} refreshToken - The refresh token to revoke
+     * @returns {Promise<Object>} Revocation response
+     */
+    async revokeToken(accessToken, refreshToken) {
+        const revokeUrl = `${this._getAuthServerBase()}/oauth2/revoke`;
+
+        const response = await axios.post(revokeUrl, {
+            token: refreshToken,
+        }, {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+            },
+        });
+
+        return response.data;
+    }
+
+    /**
+     * Revoke ALL sessions for the current user+client on the OAuth2 server.
+     * Per the integration guide: POST {AUTH_SERVER}/oauth2/revoke
+     * Body: { "revoke_all": true }
+     *
+     * @param {string} accessToken - Bearer token for authorization
+     * @returns {Promise<Object>} Revocation response
+     */
+    async revokeAllSessions(accessToken) {
+        const revokeUrl = `${this._getAuthServerBase()}/oauth2/revoke`;
+
+        const response = await axios.post(revokeUrl, {
+            revoke_all: true,
+        }, {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+            },
+        });
+
+        return response.data;
     }
 }
 

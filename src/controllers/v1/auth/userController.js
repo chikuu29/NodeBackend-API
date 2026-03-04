@@ -16,9 +16,9 @@ const { required } = require('joi');
 const registerUser = async (req, res) => {
     try {
         console.log(req.body);
-        
+
         // console.log('req.body :', req.body);
-        
+
         // const { projectName } = req.body;
         // if (!apiRequirementsConfig[projectName]) {
         //     const message_error = { error: 'projectName does not exist', 'success': false, message: 'input error' };
@@ -159,9 +159,9 @@ const loginUser = async (req, res) => {
                     role: "user"
                 };
                 console.log('HII');
-                
-                console.log("ok",config.get('apiRequirementConfig')[CLIENT_NAME]['AUTH_PROCESS']['tokenConfig']);
-                
+
+                console.log("ok", config.get('apiRequirementConfig')[CLIENT_NAME]['AUTH_PROCESS']['tokenConfig']);
+
                 const tokens = generateTokens(payload, config.get('apiRequirementConfig')[CLIENT_NAME]['AUTH_PROCESS']['tokenConfig']);
                 const message_info = {
                     "message": 'Login successful',
@@ -236,19 +236,30 @@ const createSession = async (req, res) => {
                 message: 'Session expired. Please login again.',
             });
         }
-
-        // --- Call the OAuth2 server for fresh tokens and user info ---
-        // The session-token is an opaque refresh_token (not a JWT).
-        // We validate it by exchanging it at the OAuth2 server — if it's
-        // expired or revoked, the server returns 400/401 and we propagate.
-
-        // Step 1: Refresh the access token
-        const tokenData = await oauth2Client.refreshAccessToken(sessionToken);
+        console.log("X-Device-ID:", req.headers['x-device-id']);
+        // Step 1: Refresh the access token (pass device_id to prevent mismatch)
+        const deviceId = req.headers['x-device-id'];
+        const tokenData = await oauth2Client.refreshAccessToken(sessionToken, deviceId);
         const freshAccessToken = tokenData.access_token;
+
+        // If the OAuth2 server rotates refresh tokens, update the cookie.
+        // If not, the original long-lived refresh_token stays untouched.
+        if (tokenData.refresh_token && tokenData.refresh_token !== sessionToken) {
+            const isProduction = process.env.NODE_ENV === 'production';
+            const refreshExpiryMs = new Date(tokenData.refresh_exp).getTime();
+            const maxAge = refreshExpiryMs - Date.now();
+
+            res.cookie(`${isProduction ? '__Secure-' : ''}session-token`, tokenData.refresh_token, {
+                httpOnly: true,
+                secure: true,
+                sameSite: 'Strict',
+                maxAge,
+            });
+        }
 
         // Step 2: Fetch fresh user info from OAuth2 userinfo endpoint
         const userInfo = await oauth2Client.getUserInfo(freshAccessToken);
-
+        console.log("User Info:", userInfo);
         // Build the hydration response — OAuth2 server is the sole source of truth
         const sessionResponse = {
             message: 'Session restored successfully',
@@ -288,18 +299,38 @@ const createSession = async (req, res) => {
 }
 
 const logoutUser = async (req, res) => {
-    res.clearCookie('session-token', {
-        httpOnly: true,
-        sameSite: 'none',
-        httpOnly: true,
-        secure: true
-    });
-    const logoutRes = {
-        "success": true,
-        "message": "Logged out successfully",
-        "logoutTime": new Date().toISOString()
+    const isProduction = process.env.NODE_ENV === 'production';
+    const cookieName = `${isProduction ? '__Secure-' : ''}session-token`;
+
+    try {
+        // req.accessToken is set by extractBearerToken middleware
+        const refreshToken = req.cookies[cookieName];
+
+        if (req.accessToken && refreshToken) {
+            // Revoke the specific refresh token: POST /oauth2/revoke { token: "..." }
+            await oauth2Client.revokeToken(req.accessToken, refreshToken);
+        } else if (req.accessToken) {
+            // No cookie — revoke all sessions for this client as fallback
+            await oauth2Client.revokeAllSessions(req.accessToken);
+        }
+    } catch (error) {
+        // Even if revocation fails (expired token, server down),
+        // we still clear the cookie and complete the local logout.
+        console.warn('OAuth2 session revocation failed:', error?.response?.data || error.message);
     }
-    return res.status(200).json(logoutRes);
+
+    // Always clear the httpOnly cookie (must match the options used when setting it)
+    res.clearCookie(cookieName, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'Strict',
+    });
+
+    return res.status(200).json({
+        success: true,
+        message: 'Logged out successfully',
+        logoutTime: new Date().toISOString(),
+    });
 }
 
 
@@ -415,7 +446,7 @@ const googleLogin = async (req, res) => {
                 // res.redirect("https://myomspanel.onrender.com/myApps");
                 res.redirect(redirectTo)
             }
-        
+
         }
         // console.log("storeDaata", storedData);
     } catch (error) {
