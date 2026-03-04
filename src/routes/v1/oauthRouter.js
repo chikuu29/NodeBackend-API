@@ -60,7 +60,7 @@ router.get('/google/callback',
 );
 
 
-// Call Autorization aserver and do Token Exchange
-router.post('/token', oauthGrantToken)
+// Call Authorization server and do Token Exchange
+router.post('/exchange', oauthGrantToken)
 
 module.exports = router;
