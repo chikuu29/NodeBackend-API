@@ -1,15 +1,6 @@
 
-// const { readJsonFiles, getNewAccessToken } = require('../../commonServices/commonOperation');
-// const apiRequirementsConfig = readJsonFiles('./src/config/apiRequirements.json');
-// const otherConfig = readJsonFiles('./src/config/otherFeaturesConfigs.json');
 const jwt = require('jsonwebtoken');
-
-const jwkToPem = require('jwk-to-pem');
-
-
-
-const axios = require('axios');
-const configLoader = require('../../../configLoader');
+const { oauth2Client } = require('../../../services/oauth2Client');
 // Generate tokens
 const generateTokens = (payload, config) => {
     // console.log(config);
@@ -86,102 +77,57 @@ const validateAccessToken = (access_token, config) => {
 };
 
 
+/**
+ * Validate a JWT using the OAuth2 server's JWKS (cached via oauth2Client).
+ * Delegates to the singleton — discovery doc and JWKS are cached.
+ */
 const validateToken = async (token) => {
-    try {
-        const openIdUrl = configLoader.get('serverConfig')['OAUTH_LOGIN_SYSTEM']['OAUTH_OPENID_CONNECT']['production'];
-        console.log("OpenID URL:", openIdUrl);
-
-        // Fetch OpenID Discovery Document
-        const discoveryResponse = await axios.get(openIdUrl);
-        const { jwks_uri, issuer } = discoveryResponse.data;
-        console.log("JWKS URI:", jwks_uri);
-
-        // Fetch JWKS (JSON Web Key Set)
-        const jwksResponse = await axios.get( "http://localhost:8000/.well-known/jwks.json");
-        const jwks = jwksResponse.data.keys;
-
-        // Decode JWT to get the 'kid' (Key ID) from header
-        const decodedHeader = jwt.decode(token, { complete: true });
-        const kid = decodedHeader.header.kid;
-        console.log("Token kid:", kid);
-
-        // Find the matching JWK
-        const jwk = jwks.find(key => key.kid === kid);
-
-        if (!jwk) {
-            throw new Error("No matching JWK found for the token.");
-        }
-
-        // Convert JWK to PEM
-        const publicKey = jwkToPem(jwk);
-
-        // console.log(publicKey);
-        
-
-        // Verify the JWT
-        const payload = jwt.verify(token, publicKey, {
-            algorithms: ['RS256'], // Ensure RS256
-            // issuer,               // Validate the issuer
-        });
-
-        console.log("✅ Token is valid:", payload);
-        return payload;
-
-    } catch (error) {
-        console.error("❌ Token validation failed:", error.message);
-        return null;
-    }
+    return oauth2Client.validateToken(token);
 };
 
+/**
+ * Exchange an authorization code for tokens via the OAuth2 server.
+ * Sets the refresh_token as an httpOnly cookie for session persistence.
+ */
 const oauthGrantToken = async (req, res) => {
     try {
-        console.log("====Calling OauthGrantToken====", req.body);
+        console.log('====Calling OauthGrantToken====', req.body);
 
-        // Get token URI from config
-        const tokenUri = configLoader.get('serverConfig')['OAUTH_LOGIN_SYSTEM']['OAUTH_CREDENTIALS']['token_uri'];
-        // console.log("Token URI:", tokenUri);
-
-        // Make POST request to OAuth server
-        const response = await axios.post(tokenUri, req.body, {
-            headers: {
-                'Content-Type': 'application/json',
-            },
+        // Delegate the token exchange to the OAuth2Client
+        const tokenData = await oauth2Client.exchangeCode({
+            code: req.body.code,
+            redirect_url: req.body.redirect_url,
+            device_id: req.body.device_id,
+            code_verifier: req.body.code_verifier,
         });
-        console.log(response.data);
 
-        const { access_token, refresh_token, refresh_exp } = response.data;
+        console.log('tokenData--->', tokenData);
+        const { refresh_token, refresh_exp } = tokenData;
 
+        // Set refresh token in a secure, httpOnly cookie
         const refreshExpiryMs = new Date(refresh_exp).getTime();
-        // Calculate maxAge as the difference between refresh_exp and current time
         const maxAge = refreshExpiryMs - Date.now();
-        // Set refresh token in a secure, HTTP-only cookie
         const isProduction = process.env.NODE_ENV === 'production';
 
         res.cookie(`${isProduction ? '__Secure-' : ''}session-token`, refresh_token, {
             httpOnly: true,
             secure: true,
             sameSite: 'Strict',
-            maxAge: maxAge // Align cookie expiry with refresh token expiry
+            maxAge,
         });
-        // Log and return the successful response
-        console.log('Response from OAuth:', response.data);
-        return res.status(200).json(response.data);
 
+        return res.status(200).json(tokenData);
     } catch (error) {
-        // Error handling for different scenarios
         if (error.response) {
-            // Server responded with a status code outside 2xx
             console.error('Error Response:', error.response.data);
             return res.status(error.response.status).json({
                 error: error.response.data,
                 message: 'Error from OAuth server',
             });
         } else if (error.request) {
-            // No response received from the server
             console.error('No Response from OAuth server:', error.request);
             return res.status(500).json({ message: 'No response from OAuth server' });
         } else {
-            // Other errors (e.g., setup issues)
             console.error('Request Error:', error.message);
             return res.status(500).json({ message: 'Request failed', error: error.message });
         }

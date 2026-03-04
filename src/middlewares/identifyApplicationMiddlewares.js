@@ -1,24 +1,25 @@
 
 const config = require('../configLoader');
-const { validateAccessToken,validateToken } = require('../controllers/v1/auth/authentication')
+const { validateAccessToken, validateToken } = require('../controllers/v1/auth/authentication')
 const checkSession = async (req, res, next) => {
     try {
-        console.log("checkkk",req.cookies);
+        console.log("checkkk", req.cookies);
         const isProduction = process.env.NODE_ENV === 'production';
         const cookieName = `${isProduction ? '__Secure-' : ''}session-token`;
         console.log(cookieName);
-        
+
         var refresh_token = req.cookies[cookieName]
-        console.log("req",refresh_token);
-        
+        console.log("--- refresh_token ---", refresh_token);
+
+
         const CLIENT_NAME = req.CLIENT_NAME
         if (!refresh_token) {
             return res.status(401).json({ success: false, message: "Login State Lost" });
         } else {
             // console.log("project Name", projectName);
             // const validateTokenInfo = validateAccessToken(refresh_token, config.get('apiRequirementConfig')[CLIENT_NAME]['AUTH_PROCESS']['tokenConfig']);
-            const decodeData=  await validateToken(refresh_token)
-            console.log("validateToken",decodeData);
+            const decodeData = await validateToken(refresh_token)
+            console.log("validateToken", decodeData);
             if (decodeData) {
                 req.AUTH_INFO = decodeData;
                 // req.projectName = projectName;
@@ -42,7 +43,7 @@ const authenticate = async (req, res, next) => {
         }
         const CLIENT_NAME = req.CLIENT_NAME
         // const tokenInfo = validateAccessToken(accessToken, config.get('apiRequirementConfig')[CLIENT_NAME]['AUTH_PROCESS']['tokenConfig']);
-        const tokenInfo=validateToken(accessToken)
+        const tokenInfo = validateToken(accessToken)
         if (tokenInfo) {
             req.tokenInfo = tokenInfo;
             return next();
@@ -69,8 +70,8 @@ const identifyApplication = async (req, res, next) => {
         X_CLIENT_ID = config.get('serverConfig')['X_CLIENT_ID'] || []
         if (X_CLIENT_ID.includes(req['headers']['x-client-id'])) {
             req.CLIENT_NAME = req['headers']['x-client-id'];
-            req.APP_DB_COLLECTION=config.get('databaseConfig')['prefixCollection'][app] || null
-            req.appName=app || 'defult'
+            req.APP_DB_COLLECTION = config.get('databaseConfig')['prefixCollection'][app] || null
+            req.appName = app || 'defult'
             return next();
         } else {
             return res.status(401).json({ success: false, message: "Unautorization Access" });

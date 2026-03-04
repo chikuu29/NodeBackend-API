@@ -10,6 +10,7 @@ const config = require('../../../configLoader');
 const { dataSanitizer } = require('../../../utils/dataSanitizerUtils')
 const { mongoClient } = require('../../../services/mongoService')
 const { generateTokens, getNewAccessToken } = require('./authentication');
+const { oauth2Client } = require('../../../services/oauth2Client');
 const { required } = require('joi');
 
 const registerUser = async (req, res) => {
@@ -221,60 +222,68 @@ const loginUser = async (req, res) => {
 }
 
 const createSession = async (req, res) => {
-    console.log("===CALLING CREATESESSION===",req.AUTH_INFO);
-    
+    console.log("===CALLING CREATESESSION===");
+
     const isProduction = process.env.NODE_ENV === 'production';
     const cookieName = `${isProduction ? '__Secure-' : ''}session-token`;
+
     try {
-        var session_play = req.cookies[cookieName]
-        console.log("hiii",session_play);
-        
-        // const projectName = req.projectName;
-        // const CLIENT_NAME = req.CLIENT_NAME
-        // console.log(config.get('apiRequirementConfig')[CLIENT_NAME]['AUTH_PROCESS']['tokenConfig']);
+        const sessionToken = req.cookies[cookieName];
 
-        // const newAccessToken = getNewAccessToken(refresh_token, config.get('apiRequirementConfig')[CLIENT_NAME]['AUTH_PROCESS']['tokenConfig']);
-        // console.log(newAccessToken);
-         // Get token URI from config
-      
-
-
-        if (session_play) {
-            const tokenUri = configLoader.get('serverConfig')['OAUTH_LOGIN_SYSTEM']['OAUTH_CREDENTIALS']['token_uri'];
-            // console.log("Token URI:", tokenUri);
-    
-            // Make POST request to OAuth server
-            const response = await axios.post(tokenUri, req.body, {
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+        if (!sessionToken) {
+            return res.status(401).json({
+                success: false,
+                message: 'Session expired. Please login again.',
             });
-            console.log(response.data);
-    
-            const { access_token, refresh_token, refresh_exp } = response.data;
-            var AUTH_INFO = req.AUTH_INFO;
-            const Login_info = {
-                "message": 'ReLogin successful',
-                'success': true,
-                "authProvider": AUTH_INFO.authProvider,
-                "login_info": {
-                    userFullName: AUTH_INFO.userName,
-                    role: AUTH_INFO.role,
-                    email: AUTH_INFO.email,
-                    phone: AUTH_INFO.phone,
-                    image: AUTH_INFO.image,
-                    firstName: AUTH_INFO.firstName,
-                    lastName: AUTH_INFO.lastName
-                },
-                "accessToken": "newAccessToken"
-            };
-            return res.status(200).json(Login_info);
-        } else {
-            message_error = { message: 'Please provide valid refresh token', error: 'Please provide valid refresh token', 'success': false };
-            return res.status(400).json(message_error);
         }
+
+        // --- Call the OAuth2 server for fresh tokens and user info ---
+        // The session-token is an opaque refresh_token (not a JWT).
+        // We validate it by exchanging it at the OAuth2 server — if it's
+        // expired or revoked, the server returns 400/401 and we propagate.
+
+        // Step 1: Refresh the access token
+        const tokenData = await oauth2Client.refreshAccessToken(sessionToken);
+        const freshAccessToken = tokenData.access_token;
+
+        // Step 2: Fetch fresh user info from OAuth2 userinfo endpoint
+        const userInfo = await oauth2Client.getUserInfo(freshAccessToken);
+
+        // Build the hydration response — OAuth2 server is the sole source of truth
+        const sessionResponse = {
+            message: 'Session restored successfully',
+            success: true,
+            authProvider: userInfo.authProvider || 'OAUTH',
+            access_token: freshAccessToken,
+            login_info: {
+                userFullName: userInfo.name || userInfo.userName || '',
+                role: userInfo.role || '',
+                email: userInfo.email || '',
+                phone: userInfo.phone || null,
+                image: userInfo.picture || userInfo.image || null,
+                firstName: userInfo.given_name || userInfo.firstName || '',
+                lastName: userInfo.family_name || userInfo.lastName || '',
+                tenant_name: userInfo.tenant_name || null,
+                permissions: userInfo.permissions || [],
+            },
+        };
+
+        return res.status(200).json(sessionResponse);
     } catch (error) {
-        return res.status(400).json({ "message_info": error });
+        console.error('createSession error:', error?.response?.data || error.message);
+
+        // If OAuth2 server rejects the refresh_token, the session is invalid
+        if (error?.response?.status === 400 || error?.response?.status === 401) {
+            return res.status(401).json({
+                success: false,
+                message: 'Session expired. Please login again.',
+            });
+        }
+
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to restore session.',
+        });
     }
 }
 

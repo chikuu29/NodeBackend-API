@@ -1,5 +1,4 @@
 
-const configLoader = require('../../configLoader');
 const express = require('express');
 const router = express.Router();
 const passport = require('passport');
@@ -11,9 +10,8 @@ const callbackURL = process.env.NODE_ENV === 'production'
     ? 'https://myomspanel.onrender.com/api/v1/oauth/google/callback'  // Production URL
     : 'http://localhost:5173/api/v1/oauth/google/callback';  // Development URL
 
-const googleConfigFromFile = configLoader.get('serverConfig')['OAUTH_LOGIN_SYSTEM']['GOOGLE_AUTH_CREDENTIALS'] || {};
-const googleClientId = process.env.GOOGLE_CLIENT_ID || googleConfigFromFile['client_id'];
-const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET || googleConfigFromFile['client_secret'];
+const googleClientId = process.env.GOOGLE_CLIENT_ID || process.env.OAUTH_CLIENT_ID;
+const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET || process.env.OAUTH_CLIENT_SECRET;
 
 passport.use(
     new GoogleStrategy(

@@ -8,6 +8,9 @@ const { loginUser, createSession, logoutUser, registerUser } = require('../../co
 router.post("/register",registerUser)
 router.post('/login', loginUser);
 router.get('/logout', checkSession, logoutUser);
-router.get("/me", checkSession, createSession);
+// /auth/me does NOT use checkSession because the session-token cookie
+// is an opaque OAuth2 refresh_token (not a JWT). createSession validates
+// it by calling the OAuth2 server directly via oauth2Client.refreshAccessToken().
+router.get("/me", createSession);
 
 module.exports = router;
