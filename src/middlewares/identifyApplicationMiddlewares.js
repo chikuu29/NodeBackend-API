@@ -61,21 +61,25 @@ const extractBearerToken = (req, res, next) => {
 const authenticate = async (req, res, next) => {
     try {
         // Use centralized extraction if not already done
-        const accessToken = req.accessToken
-            || (req.headers.authorization && req.headers.authorization.split('Bearer ').pop());
+        const accessToken = req.accessToken;
 
+        // No token provided at all → 401
         if (!accessToken) {
-            return res.status(403).json({ success: false, message: 'Forbidden — no access token provided' });
+            return res.status(401).json({ success: false, message: 'Access token is required' });
         }
 
         const tokenInfo = await validateToken(accessToken);
+
         if (tokenInfo) {
             req.tokenInfo = tokenInfo;
-            req.accessToken = accessToken; // Ensure it's set for downstream handlers
+            req.accessToken = accessToken;
             return next();
-        } else {
-            return res.status(403).json({ success: false, message: 'Invalid or expired access token' });
         }
+
+        // Token is expired or invalid → 401 (NOT 403)
+        // 401 = credentials missing/expired — triggers frontend silent refresh
+        // 403 = authenticated but lacking permissions — different semantic
+        return res.status(401).json({ success: false, message: 'Access token expired or invalid' });
     } catch (error) {
         return res.status(401).json({ success: false, message: 'Unauthorized' });
     }

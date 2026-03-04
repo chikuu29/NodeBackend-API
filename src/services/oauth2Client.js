@@ -153,9 +153,10 @@ class OAuth2Client {
      *
      * @param {string} refreshToken - The refresh token (stored in httpOnly cookie)
      * @param {string} [deviceId] - Device identifier to prevent device mismatch errors
+     * @param {boolean} [rotate=true] - Whether to rotate the refresh token (default: true)
      * @returns {Promise<Object>} Token response with fresh access_token
      */
-    async refreshAccessToken(refreshToken, deviceId) {
+    async refreshAccessToken(refreshToken, deviceId, rotate = true) {
         const discovery = await this.getDiscovery();
         const tokenUrl = discovery.token_endpoint || process.env.OAUTH_TOKEN_URI;
 
@@ -164,6 +165,7 @@ class OAuth2Client {
             refresh_token: refreshToken,
             client_id: process.env.OAUTH_CLIENT_ID,
             client_secret: process.env.OAUTH_CLIENT_SECRET,
+            rotate: rotate, // Explicitly pass rotation preference
         };
 
         // Include device_id to prevent device mismatch rejection

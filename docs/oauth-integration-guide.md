@@ -277,20 +277,23 @@ Content-Type: application/json
     "refresh_token": "CURRENT_REFRESH_TOKEN",
     "client_id": "YOUR_CLIENT_ID",
     "client_secret": "YOUR_CLIENT_SECRET",
-    "device_id": "OPTIONAL_DEVICE_ID"
+    "device_id": "OPTIONAL_DEVICE_ID",
+    "rotate": false
 }
 ```
+
+> **💡 Optimization:** If you set `"rotate": false`, the server will only return a new `access_token` and keep the current `refresh_token` active. This is recommended if your access tokens have very short lifetimes (e.g., 30 seconds) to avoid excessive rotation.
 
 #### Response
 
 ```json
 {
     "access_token": "eyJhbG...(NEW)...",
-    "refresh_token": "aB9cD3eF...(NEW — MUST SAVE THIS!)...",
+    "refresh_token": "null (if rotate: false) or a new token",
     "id_token": "eyJhbG...(NEW)...",
     "refresh_exp": "2026-03-19T09:00:00Z",
     "success": true,
-    "message": "Token refreshed successfully. New refresh token issued."
+    "message": "Token refreshed successfully."
 }
 ```
 
@@ -298,8 +301,8 @@ Content-Type: application/json
 
 | Rule | Detail |
 |------|--------|
-| **Single-use** | Each refresh token works exactly once |
-| **Rotation** | Server returns a NEW refresh token every time |
+| **Single-use** | If `rotate: true` (default), each token works exactly once |
+| **Optional Rotation** | Set `rotate: false` to reuse the same refresh token |
 | **Device-bound** | Token is tied to the device fingerprint |
 | **Grace period** | 30s window for retries (e.g., React StrictMode double-calls) |
 | **Theft detection** | Replaying a used token (after 30s) revokes ALL tokens for that user+client |
