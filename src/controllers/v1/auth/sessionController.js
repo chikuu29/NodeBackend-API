@@ -30,7 +30,7 @@ const createSession = async (req, res) => {
 
     try {
         const sessionToken = req.cookies[cookieName];
-
+        console.log("sessionToken", sessionToken);
         if (!sessionToken) {
             return sendError(res, 401, 'Session expired. Please login again.');
         }
@@ -43,6 +43,8 @@ const createSession = async (req, res) => {
         // Step 2: If OAuth2 server rotated the refresh token, update the cookie
         if (tokenData.refresh_token && tokenData.refresh_token !== sessionToken) {
             const refreshExpiryMs = new Date(tokenData.refresh_exp).getTime();
+            console.log("refreshExpiryMs", refreshExpiryMs);
+
             const maxAge = refreshExpiryMs - Date.now();
 
             res.cookie(cookieName, tokenData.refresh_token, {
@@ -113,8 +115,10 @@ const refreshToken = async (req, res) => {
         // If OAuth2 server rotated the refresh token, update the cookie
         if (tokenData.refresh_token && tokenData.refresh_token !== sessionToken) {
             const refreshExpiryMs = new Date(tokenData.refresh_exp).getTime();
+            console.log("refreshExpiryMs", refreshExpiryMs);
+            console.log("Date.now()", Date.now());
             const maxAge = refreshExpiryMs - Date.now();
-
+            console.log("maxAge", maxAge);
             res.cookie(cookieName, tokenData.refresh_token, {
                 httpOnly: true,
                 secure: true,

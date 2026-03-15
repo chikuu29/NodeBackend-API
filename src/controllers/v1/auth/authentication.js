@@ -105,8 +105,19 @@ const oauthGrantToken = async (req, res) => {
         const { refresh_token, refresh_exp } = tokenData;
 
         // Set refresh token in a secure, httpOnly cookie
-        const refreshExpiryMs = new Date(refresh_exp).getTime();
-        const maxAge = refreshExpiryMs - Date.now();
+        let cleanExp = refresh_exp;
+        if (typeof cleanExp === 'string') {
+            // Some backends might append both +00:00 and Z; format it properly for Node
+            cleanExp = cleanExp.replace(/\+00:00Z$/, 'Z');
+        }
+        let refreshExpiryMs = new Date(cleanExp).getTime();
+
+        // Fallback to 14 days if parsing fails
+        if (isNaN(refreshExpiryMs)) {
+            refreshExpiryMs = new Date().getTime() + (14 * 24 * 60 * 60 * 1000);
+        }
+
+        const maxAge = Math.max(0, refreshExpiryMs - new Date().getTime());
         const isProduction = process.env.NODE_ENV === 'production';
 
         res.cookie(`${isProduction ? '__Secure-' : ''}session-token`, refresh_token, {
