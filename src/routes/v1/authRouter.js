@@ -7,7 +7,7 @@ const { createSession, refreshToken, logoutUser } = require('../../controllers/v
 
 router.post("/register", registerUser);
 router.post('/login', loginUser);
-router.get('/logout', extractBearerToken, logoutUser);
+router.post('/logout', extractBearerToken, logoutUser);
 router.get("/me", extractBearerToken, createSession);
 router.get("/refresh", extractBearerToken, refreshToken);
 

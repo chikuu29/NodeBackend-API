@@ -61,17 +61,7 @@ const createSession = async (req, res) => {
         return sendSuccess(res, {
             authProvider: userInfo.authProvider || 'OAUTH',
             access_token: freshAccessToken,
-            login_info: {
-                userFullName: userInfo.name || userInfo.userName || '',
-                role: userInfo.role || '',
-                email: userInfo.email || '',
-                phone: userInfo.phone || null,
-                image: userInfo.picture || userInfo.image || null,
-                firstName: userInfo.given_name || userInfo.firstName || '',
-                lastName: userInfo.family_name || userInfo.lastName || '',
-                tenant_name: userInfo.tenant_name || null,
-                permissions: userInfo.permissions || [],
-            },
+            login_info: userInfo
         }, 'Session restored successfully');
     } catch (error) {
         console.error('createSession error:', error?.response?.data || error.message);
