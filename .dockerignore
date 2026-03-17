@@ -4,7 +4,6 @@ node_modules
 # Ignore logs
 logs
 *.log
-docs
 
 # Ignore environment variables
 .env

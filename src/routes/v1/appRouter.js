@@ -1,13 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const appController = require('../../controllers/app/appController');
-const { authenticate } = require('../../middlewares/identifyApplicationMiddlewares');
+const { authenticate, extractBearerToken } = require('../../middlewares/identifyApplicationMiddlewares');
 
-router.get('/ui_template',appController.getTemplate)
-router.get('/app-configuration',authenticate, appController.generateConfig)
-router.get('/getNotification',authenticate,appController.getNotifiction)
-router.get('/getDataBaseStatisics',authenticate,appController.getDataBaseStatisics)
-
+router.get('/ui_template', extractBearerToken, authenticate, appController.getTemplate)
+router.get('/app-configuration', extractBearerToken, authenticate, appController.generateConfig)
+router.get('/getNotification', extractBearerToken, authenticate, appController.getNotifiction)
+router.get('/getDataBaseStatisics', extractBearerToken, authenticate, appController.getDataBaseStatisics)
+router.post('/upload', extractBearerToken, authenticate, appController.uploadFile)
 
 
 

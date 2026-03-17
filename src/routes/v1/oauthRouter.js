@@ -1,20 +1,23 @@
 
-const configLoader = require('../../configLoader');
 const express = require('express');
 const router = express.Router();
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const { googleLogin } = require('../../controllers/v1/auth/userController');
+const { oauthGrantToken } = require('../../controllers/v1/auth/authentication')
 // Google OAuth Strategy setup
 const callbackURL = process.env.NODE_ENV === 'production'
     ? 'https://myomspanel.onrender.com/api/v1/oauth/google/callback'  // Production URL
     : 'http://localhost:5173/api/v1/oauth/google/callback';  // Development URL
 
+const googleClientId = process.env.GOOGLE_CLIENT_ID || process.env.OAUTH_CLIENT_ID;
+const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET || process.env.OAUTH_CLIENT_SECRET;
+
 passport.use(
     new GoogleStrategy(
         {
-            clientID: configLoader.get('serverConfig')['OAUTH_LOGIN_SYSTEM']['GOOGLE_AUTH_CREDENTIALS']['client_id'],
-            clientSecret: configLoader.get('serverConfig')['OAUTH_LOGIN_SYSTEM']['GOOGLE_AUTH_CREDENTIALS']['client_secret'],
+            clientID: googleClientId,
+            clientSecret: googleClientSecret,
             callbackURL: process.env.GOOGLE_OAUTH_CALLBACK_URL || callbackURL,
         },
         (accessToken, refreshToken, profile, done) => {
@@ -36,7 +39,7 @@ router.get(
         const redirectTo = req.query.redirectTo || '/';
         // Store `redirectTo` in a session or pass as a query param
         // const callbackUrl = `/auth/google/callback?redirectTo=${encodeURIComponent(redirectTo)}`;
-       
+
         // Proceed with Google authentication
         passport.authenticate('google', {
             scope: ['profile', 'email'],
@@ -55,4 +58,9 @@ router.get('/google/callback',
     }),
     googleLogin
 );
+
+
+// Call Authorization server and do Token Exchange
+router.post('/exchange', oauthGrantToken)
+
 module.exports = router;

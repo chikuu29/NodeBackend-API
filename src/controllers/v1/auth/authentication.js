@@ -1,81 +1,11 @@
 
-// const { readJsonFiles, getNewAccessToken } = require('../../commonServices/commonOperation');
-// const apiRequirementsConfig = readJsonFiles('./src/config/apiRequirements.json');
-// const otherConfig = readJsonFiles('./src/config/otherFeaturesConfigs.json');
 const jwt = require('jsonwebtoken');
-// const MongoDBManager = require('../../commonServices/mongoServices');
-// const mongoDBManagerObj = new MongoDBManager();
-// const mongoConfig = readJsonFiles('./config/mongoConfig.json');
-// const grantPermission = async (req, res) => {
-//     try {
-//         var refresh_token = req.cookies['refresh_token']
-//         const projectName = req.projectName;
-//         const newAccessToken = getNewAccessToken(refresh_token, otherConfig[projectName]['tokenConfig']['secretKey'], otherConfig[projectName]['tokenConfig']['acess_expiration_delta']);
-//         if (newAccessToken) {
-          
-//             var validateTokenInfo = req.validateTokenInfo;
-//             const Login_info = {
-//                 "message": 'ReLogin successful',
-//                 'success': true,
-//                 "authProvider": "Relogin-web",
-//                 "login_info": {
-//                     userFullName: validateTokenInfo.userName,
-//                     email: validateTokenInfo.email,
-//                     phone: validateTokenInfo.phone,
-//                     image: validateTokenInfo.image,
-//                     firstName: validateTokenInfo.firstName,
-//                     lastName: validateTokenInfo.lastName
-//                 },
-//                 "accessToken": newAccessToken
-//             };
-//             return res.status(200).json(Login_info);
-//         } else {
-//             message_error = { message: 'Please provide valid refresh token', error: 'Please provide valid refresh token', 'success': false };
-//             return res.status(400).json(message_error);
-//         }
-//     } catch (error) {
-//         return res.status(400).json({ "message_info": error });
-//     }
-// }
-
-
-// const newAccessToken = async (req, res) => {
-//     try {
-//         var refresh_token = req.cookies['refresh_token']
-//         const projectName = req.body.projectName;
-//         const newAccessToken = getNewAccessToken(refresh_token, otherConfig[projectName]['tokenConfig']['secretKey'], otherConfig[projectName]['tokenConfig']['acess_expiration_delta']);
-//         if (newAccessToken) {
-//             // var validateTokenInfo = req.validateTokenInfo;
-//             // const Login_info = {
-//             //     "message": 'ReLogin successful',
-//             //     'success': true,
-//             //     "authProvider":"Relogin-web",
-//             //     "login_info": {
-//             //         userFullName: validateTokenInfo.userName,
-//             //         email: validateTokenInfo.email,
-//             //         phone: validateTokenInfo.phone,
-//             //         image:validateTokenInfo.image,
-//             //         firstName: validateTokenInfo.firstName,
-//             //         lastName: validateTokenInfo.lastName
-//             //     },
-//             //     "accessToken":newAccessToken  
-//             // };
-//             return res.status(200).json({ accessToken: newAccessToken });
-//         } else {
-//             message_error = { message: 'Please provide valid refresh token', error: 'Please provide valid refresh token', 'success': false };
-//             return res.status(400).json(message_error);
-//         }
-//     } catch (error) {
-//         return res.status(400).json({ "message_info": error });
-//     }
-// }
-
-
+const { oauth2Client } = require('../../../services/oauth2Client');
 // Generate tokens
-const generateTokens = (payload,config) => {
+const generateTokens = (payload, config) => {
     // console.log(config);
-    
-    const {secretKey,refresh_expiration_delta,acess_expiration_delta}=config
+
+    const { secretKey, refresh_expiration_delta, acess_expiration_delta } = config
     const access_token_exp = Math.floor(Date.now() / 1000) + acess_expiration_delta;
     const refresh_token_exp = Math.floor(Date.now() / 1000) + refresh_expiration_delta;
 
@@ -100,9 +30,9 @@ const generateTokens = (payload,config) => {
 };
 
 
-const getNewAccessToken = (refresh_token,config) => {
+const getNewAccessToken = (refresh_token, config) => {
     try {
-        const {secretKey,acess_expiration_delta}=config
+        const { secretKey, acess_expiration_delta } = config
         const refresh_token_data = jwt.verify(refresh_token, secretKey);
         // console.log('refresh_token_data', refresh_token_data);
         // Check if the refresh token has payload and expiration time
@@ -132,7 +62,7 @@ const getNewAccessToken = (refresh_token,config) => {
 // Validate access token
 const validateAccessToken = (access_token, config) => {
     try {
-        const {secretKey}=config
+        const { secretKey } = config
         console.log('Validating access token...', access_token, secretKey);
         const decoded_token = jwt.verify(access_token, secretKey);
         const exp_datetime = new Date(decoded_token.exp * 1000);
@@ -146,10 +76,97 @@ const validateAccessToken = (access_token, config) => {
     }
 };
 
-module.exports={
+
+/**
+ * Validate a JWT using the OAuth2 server's JWKS (cached via oauth2Client).
+ * Delegates to the singleton — discovery doc and JWKS are cached.
+ */
+const validateToken = async (token) => {
+    return oauth2Client.validateToken(token);
+};
+
+/**
+ * Exchange an authorization code for tokens via the OAuth2 server.
+ * Sets the refresh_token as an httpOnly cookie for session persistence.
+ */
+const oauthGrantToken = async (req, res) => {
+    try {
+        console.log('====Calling OauthGrantToken====', req.body);
+
+        // Delegate the token exchange to the OAuth2Client
+        const tokenData = await oauth2Client.exchangeCode({
+            code: req.body.code,
+            redirect_url: req.body.redirect_url,
+            device_id: req.body.device_id,
+            code_verifier: req.body.code_verifier,
+        });
+
+        console.log('tokenData--->', tokenData);
+        const { refresh_token, refresh_exp } = tokenData;
+
+        // Set refresh token in a secure, httpOnly cookie
+        let cleanExp = refresh_exp;
+        if (typeof cleanExp === 'string') {
+            // Some backends might append both +00:00 and Z; format it properly for Node
+            cleanExp = cleanExp.replace(/\+00:00Z$/, 'Z');
+        }
+        let refreshExpiryMs = new Date(cleanExp).getTime();
+
+        // Fallback to 14 days if parsing fails
+        if (isNaN(refreshExpiryMs)) {
+            refreshExpiryMs = new Date().getTime() + (14 * 24 * 60 * 60 * 1000);
+        }
+
+        const maxAge = Math.max(0, refreshExpiryMs - new Date().getTime());
+        const isProduction = process.env.NODE_ENV === 'production';
+
+        res.cookie(`${isProduction ? '__Secure-' : ''}session-token`, refresh_token, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'Strict',
+            maxAge,
+        });
+
+        // Internally call the OAuth2 server's userinfo endpoint to get
+        // full user profile — so the frontend gets everything in one call.
+        const userInfo = await oauth2Client.getUserInfo(tokenData.access_token);
+        console.log("User Info:", userInfo);
+
+        const responsePayload = {
+            ...tokenData,
+            success: true,
+            authProvider: userInfo.authProvider || 'OAUTH',
+            login_info: {
+                ...userInfo
+            },
+        };
+
+        return res.status(200).json(responsePayload);
+    } catch (error) {
+        if (error.response) {
+            console.error('Error Response:', error.response.data);
+            return res.status(error.response.status).json({
+                error: error.response.data,
+                message: 'Error from OAuth server',
+            });
+        } else if (error.request) {
+            console.error('No Response from OAuth server:', error.request);
+            return res.status(500).json({ message: 'No response from OAuth server' });
+        } else {
+            console.error('Request Error:', error.message);
+            return res.status(500).json({ message: 'Request failed', error: error.message });
+        }
+    }
+};
+
+
+
+module.exports = {
     generateTokens,
     getNewAccessToken,
-    validateAccessToken
+    validateAccessToken,
+    oauthGrantToken,
+    validateToken
     // newAccessToken,
     // grantPermission
 }
