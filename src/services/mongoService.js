@@ -1,97 +1,105 @@
 const { MongoClient, ObjectId } = require("mongodb");
 // const commonOperation = require('../commonServices/commonOperation');
 
-const configLoader = require('../configLoader');
-
-// const mongoConfig = commonOperation.readJsonFiles('./src/config/mongoConfig.json');
-const MONGO_CONNECTION_CONFIG = configLoader.get('databaseConfig');
-
 let dbClient;
+let dbInstance;
+let connectionPromise;
+
+const getMongoUri = () => process.env.MONGO_URI?.trim();
+
+const maskMongoUrl = (url) => url.replace(/\/\/([^:/?#]+):([^@/]+)@/, '//***:***@');
 
 const connect = async () => {
-    if (dbClient && dbClient.isConnected()) {
-        console.log("✅ Using existing MongoDB connection.");
-        return dbClient.db(); // Reuse the existing connection
+    if (dbInstance) {
+        return dbInstance;
+    }
+
+    if (connectionPromise) {
+        return connectionPromise;
     }
 
     console.log("🔍 TRYING TO ESTABLISH MONGO CONNECTION");
 
-    try {
-        let url;
-        if (MONGO_CONNECTION_CONFIG.DB_CONNECTION_TYPE === "ATLAS") {
-            const CONNECTION_DETAILS = MONGO_CONNECTION_CONFIG.MONGO_ATLAS_CONNECTION;
-            url = `mongodb+srv://${CONNECTION_DETAILS.user}:${CONNECTION_DETAILS.password}@${CONNECTION_DETAILS.host}/${CONNECTION_DETAILS.databaseName}?retryWrites=true&w=majority&appName=Cluster0`;
-        } else {
-            const CONNECTION_DETAILS = MONGO_CONNECTION_CONFIG.auth;
-            url = `mongodb://${CONNECTION_DETAILS.user}:${CONNECTION_DETAILS.password}@${CONNECTION_DETAILS.host}:${CONNECTION_DETAILS.port}/?authSource=${CONNECTION_DETAILS.databaseName}&authMechanism=${CONNECTION_DETAILS.authMechanism}`;
+    connectionPromise = (async () => {
+        const mongoUri = getMongoUri();
+
+        if (!mongoUri) {
+            throw new Error('MONGO_URI is missing. Add it to your .env file.');
         }
-        // console.log(url);
+
+        console.log(maskMongoUrl(mongoUri));
         
-        dbClient = new MongoClient(url); // Use unified topology for better handling of replica sets and sharding.
+        dbClient = new MongoClient(mongoUri, {
+            maxPoolSize: 10,
+            minPoolSize: 1,
+            serverSelectionTimeoutMS: 5000,
+        });
         await dbClient.connect();
+        dbInstance = dbClient.db();
         console.log("===🎉🎉 CONNECTED TO MONGO DB 🎉🎉===");
 
-        return dbClient.db();
+        return dbInstance;
+    })();
+
+    try {
+        return await connectionPromise;
     } catch (error) {
         console.error("❌ MONGO CONNECTION FAILED", error);
+        connectionPromise = null;
+        dbClient = null;
+        dbInstance = null;
         throw error;
     }
 };
 
 class MongoDBManager {
-    constructor() {
-        this.db = null;
-    }
-
     async init() {
-        if (!this.db) {
-            this.db = await connect();
-        }
+        return connect();
     }
 
     async find(collectionName, query = {}) {
-        await this.init();
-        const collection = this.db.collection(collectionName);
+        const db = await this.init();
+        const collection = db.collection(collectionName);
         return await collection.find(query).toArray();
     }
 
     async findOne(collectionName, query = {},projection={}) {
-        await this.init();
+        const db = await this.init();
      
-        const collection = this.db.collection(collectionName);
+        const collection = db.collection(collectionName);
         return await collection.findOne(query,{ projection: projection});
     }
 
     async fetchById(collectionName, id) {
-        await this.init();
-        const collection = this.db.collection(collectionName);
+        const db = await this.init();
+        const collection = db.collection(collectionName);
         return await collection.findOne({ _id: new ObjectId(id) });
     }
 
     async insert(collectionName, data) {
-        await this.init();
-        const collection = this.db.collection(collectionName);
+        const db = await this.init();
+        const collection = db.collection(collectionName);
         const result = await collection.insertOne(data);
         return result;
     }
 
     async update(collectionName, match, data) {
-        await this.init();
-        const collection = this.db.collection(collectionName);
+        const db = await this.init();
+        const collection = db.collection(collectionName);
         const result = await collection.updateOne(match, { $set: data });
         return result.modifiedCount > 0;
     }
 
     async delete(collectionName, id) {
-        await this.init();
-        const collection = this.db.collection(collectionName);
+        const db = await this.init();
+        const collection = db.collection(collectionName);
         const result = await collection.deleteOne({ _id: new ObjectId(id) });
         return result.deletedCount > 0;
     }
 
     async getStatistics(scale=1){
-        await this.init();
-        return this.db.stats(scale)
+        const db = await this.init();
+        return db.stats(scale)
     }
 }
 
