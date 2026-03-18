@@ -1,7 +1,7 @@
 const { MongoClient } = require('mongodb');
-const  commonOperation  = require('./commonOperation');
+const  commonOperation  = require('../../shared/utils/commonOperation');
 
-const mongoConfig = commonOperation.readJsonFiles('applicationConfig/mongoConfig.json');
+const mongoConfig = commonOperation.readJsonFiles('./src/config/mongoConfig.json');
 const auth = mongoConfig.auth;
 // console.log('mongoConfig :', mongoConfig);
 

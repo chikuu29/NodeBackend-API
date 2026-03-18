@@ -5,14 +5,14 @@
  */
 const bcrypt = require('bcrypt');
 const { DateTime } = require('luxon');
-const { parseUserAgent } = require('../../../utils/useragentUtils');
-const { sendMail } = require('../../../services/emailService');
-const { renderTemplate } = require('../../../utils/templateUtils');
-const { createLogger } = require('../../../utils/loggerUtils');
-const config = require('../../../configLoader');
-const { dataSanitizer } = require('../../../utils/dataSanitizerUtils');
-const { mongoClient } = require('../../../services/mongoService');
-const { generateTokens, getNewAccessToken } = require('./authentication');
+const { parseUserAgent } = require('../../shared/utils/useragent');
+const { sendMail } = require('../../shared/services/emailService');
+const { renderTemplate } = require('../../shared/utils/template');
+const { createLogger } = require('../../core/logger');
+const config = require('../../core/config');
+const { dataSanitizer } = require('../../shared/utils/dataSanitizer');
+const { mongoClient } = require('../../infrastructure/database/mongo');
+const { generateTokens, getNewAccessToken } = require('../auth/auth.controller');
 
 const registerUser = async (req, res) => {
     try {

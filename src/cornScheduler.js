@@ -3,7 +3,7 @@ const numCPUs = require('os').cpus().length;
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');// Read Application Cookies
-const cronScheduler = require('./commonServices/cronScheduler');
+const cronScheduler = require('./infrastructure/cronScheduler');
 const path = require('path');
 //scheduler lock file should be removed before running the scheduler
 const corsOption = {

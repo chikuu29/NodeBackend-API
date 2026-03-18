@@ -6,8 +6,8 @@
  * - logoutUser: Revokes the refresh token on the OAuth2 server and clears the cookie
  */
 
-const { oauth2Client } = require('../../../services/oauth2Client');
-const { sendSuccess, sendError } = require('../../../utils/responseHandler');
+const { oauth2Client } = require('../oauth/oauth2Client');
+const { sendSuccess, sendError } = require('../../shared/response');
 
 // Cookie name varies by environment (security prefix in production)
 const getSessionCookieName = () => {

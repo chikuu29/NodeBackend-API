@@ -1,10 +1,10 @@
 const schedule = require('node-schedule');
 const fs = require('fs');
 const { DateTime } = require('luxon');
-const { sendEmail } = require('./commonOperation');
-const MongoDBManager = require('./mongoServices');
-let {readJsonFiles} = require('./commonOperation');
-const otherConfig = readJsonFiles('./applicationConfig/otherFeaturesConfigs.json');
+const { sendEmail } = require('../shared/utils/commonOperation');
+const MongoDBManager = require('./database/mongoServices');
+let {readJsonFiles} = require('../shared/utils/commonOperation');
+const otherConfig = readJsonFiles('./src/config/otherFeaturesConfigs.json');
 mongoDBManagerObj = new MongoDBManager(); 
 
 const lockFilePath = './scheduler.lock';

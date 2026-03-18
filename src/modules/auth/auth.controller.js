@@ -1,6 +1,6 @@
 
 const jwt = require('jsonwebtoken');
-const { oauth2Client } = require('../../../services/oauth2Client');
+const { oauth2Client } = require('../oauth/oauth2Client');
 // Generate tokens
 const generateTokens = (payload, config) => {
     // console.log(config);

@@ -1,13 +1,13 @@
 const fs = require('fs');
 const path = require('path');
-const {readServerConfigFiles}=require('../src/utils/fileUtils')
+const {readServerConfigFiles}=require('../shared/utils/file')
 class ConfigLoader {
     constructor() {
         this.configs = {};
     }
 
     loadConfig(fileName) {
-        const filePath = path.join(__dirname, 'config', fileName);
+        const filePath = path.join(__dirname, '../config', fileName);
         // console.log("filePath",filePath);
         
         try {

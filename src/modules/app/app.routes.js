@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const appController = require('../../controllers/app/appController');
+const appController = require('./app.controller');
 const { authenticate, extractBearerToken } = require('../../middlewares/identifyApplicationMiddlewares');
 
 router.get('/ui_template', extractBearerToken, authenticate, appController.getTemplate)

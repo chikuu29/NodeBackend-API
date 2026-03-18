@@ -3,8 +3,8 @@ const express = require('express');
 const router = express.Router();
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
-const { googleLogin } = require('../../controllers/v1/auth/userController');
-const { oauthGrantToken } = require('../../controllers/v1/auth/authentication')
+const { googleLogin } = require('../users/user.controller');
+const { oauthGrantToken } = require('../auth/auth.controller')
 // Google OAuth Strategy setup
 const callbackURL = process.env.NODE_ENV === 'production'
     ? 'https://myomspanel.onrender.com/api/v1/oauth/google/callback'  // Production URL

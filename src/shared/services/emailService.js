@@ -1,4 +1,4 @@
-const configLoader = require('../configLoader');
+const configLoader = require('../../core/config');
 const nodemailer = require('nodemailer');
 const SMTP_SERVER_DETAILS = configLoader.get('serverConfig').SMTP_SERVER_DETAILS
 // Create a transporter object

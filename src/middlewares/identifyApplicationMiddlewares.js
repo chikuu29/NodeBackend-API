@@ -1,6 +1,6 @@
 
-const config = require('../configLoader');
-const { validateAccessToken, validateToken } = require('../controllers/v1/auth/authentication')
+const config = require('../core/config');
+const { validateAccessToken, validateToken } = require('../modules/auth/auth.controller')
 const checkSession = async (req, res, next) => {
     try {
         console.log("checkkk", req.cookies);

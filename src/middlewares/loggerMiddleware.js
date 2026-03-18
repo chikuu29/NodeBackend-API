@@ -1,6 +1,6 @@
 // middleware/loggerMiddleware.js
 
-const {createLogger} = require('../utils/loggerUtils');
+const {createLogger} = require('../core/logger');
 
 // Pass the project name dynamically
 const logger = createLogger('API'); // Use a specific project name for API logs

@@ -1,7 +1,7 @@
 
 
-// const MongoDBManager = require('../../commonServices/mongoServices');
-const { mongoClient } = require('../../services/mongoService')
+// const MongoDBManager = require('../../infrastructure/database/mongoServices');
+const { mongoClient } = require('../../infrastructure/database/mongo')
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -13,7 +13,7 @@ const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         console.log(req.appName);
 
-        const storagePath = path.resolve(__dirname, '../../../storage/' + req.appName); // Adjust according to your folder structure
+        const storagePath = path.resolve(__dirname, '../../storage/' + req.appName); // Adjust according to your folder structure
         // Ensure the folder exists
         // require('fs').mkdirSync(storagePath, { recursive: true });
 
@@ -159,7 +159,7 @@ const uploadFile = async (req, res) => {
         const baseUrl = process.env.FILE_UPLOAD_URL || 'http://localhost:7000/public/storage/'; // Replace with actual URL
 
         // The directory where the uploaded files are stored (absolute path)
-        const storageDirectory = path.resolve(__dirname, '../../../storage/' + req.appName); // Adjust based on where your storage is
+        const storageDirectory = path.resolve(__dirname, '../../storage/' + req.appName); // Adjust based on where your storage is
 
         // Create a detailed response message
         let responseMessage = 'Files uploaded successfully:';
